@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 from .build import BuildChart
 from .carriers import Carrier, Product, load_carriers, load_rulepacks
-from .catalog import Catalog, merge_conditions
+from .catalog import Catalog, merge_conditions, normalize
 from .models import (
     Applicant,
     ConditionEntry,
@@ -130,6 +131,9 @@ class Engine:
         if carrier.build:
             findings.extend(carrier.build.evaluate(applicant))
 
+        med_findings, med_questions = self._evaluate_medication_list(applicant, carrier)
+        findings.extend(med_findings)
+
         self._improve_questions(findings)
         settled = [f for f in findings if not f.pending]
         pending = [f for f in findings if f.pending]
@@ -141,7 +145,9 @@ class Engine:
         best_product = self._select_product(carrier, tier, applicant)
 
         if product is None and best_product is None:
-            return self._declined_result(carrier, worst_case, findings, applicant)
+            return self._declined_result(
+                carrier, worst_case, findings, applicant, med_questions
+            )
 
         # Report the conservative landing spot, and show the upside separately.
         # A guaranteed issue plan asks no health questions, so the health rules
@@ -166,11 +172,15 @@ class Engine:
                 "Guidelines are unverified defaults - confirm against the carrier's "
                 "current field underwriting guide."
             )
-        face = chosen.clamp_face(applicant.face_amount)
+        face = chosen.clamp_face(applicant.face_amount, applicant.age)
         if face != applicant.face_amount:
+            ceiling = chosen.face_max_for(applicant.age)
+            band = (
+                f" at issue age {applicant.age}" if ceiling != chosen.face_max else ""
+            )
             notes.append(
                 f"Face amount adjusted to ${face:,.0f} to fit this product's "
-                f"${chosen.face_min:,.0f}-${chosen.face_max:,.0f} range."
+                f"${chosen.face_min:,.0f}-${ceiling:,.0f} range{band}."
             )
 
         return ProductResult(
@@ -182,7 +192,7 @@ class Engine:
             best_case_tier=best_tier,
             eligible=chosen_tier != Tier.DECLINE,
             findings=sorted(findings, key=lambda f: -f.outcome.rank),
-            open_questions=[f.question for f in pending if f.question],
+            open_questions=[f.question for f in pending if f.question] + med_questions,
             notes=notes,
             quote=priced,
             benefit_schedule=chosen.benefit_schedule,
@@ -190,6 +200,87 @@ class Engine:
             face_max=chosen.face_max,
             am_best=carrier.am_best,
         )
+
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _carrier_med_keys(entry: str) -> Set[str]:
+        """Expand one carrier list entry into the forms it might be written as.
+
+        Guides list drugs as "Carbidopa/Levodopa", "Megestrol Acetate (Megace)"
+        and "Naloxone Hcl", so the slash-separated halves and the parenthesised
+        brand each have to be matchable on their own.
+        """
+        parts = [entry] + re.split(r"[/(),]", entry)
+        return {k for k in (normalize(p) for p in parts) if k}
+
+    def _applicant_med_keys(self, med: MedicationEntry) -> Set[str]:
+        keys = {normalize(med.raw)}
+        if med.ingredient:
+            keys.add(normalize(med.ingredient))
+            drug = next(
+                (d for d in self.catalog.drugs if d.ingredient == med.ingredient), None
+            )
+            if drug:
+                for brand in drug.brands:
+                    keys.add(normalize(brand))
+        return {k for k in keys if k}
+
+    def _evaluate_medication_list(
+        self, applicant: Applicant, carrier: Carrier
+    ) -> Tuple[List[Finding], List[str]]:
+        """Apply a carrier's own named drug list, if it publishes one.
+
+        A guide that names the drug outright is better evidence than inferring
+        a diagnosis from the drug and then rating the diagnosis, so this runs
+        alongside the condition rules and, being a finding like any other, the
+        worst outcome still wins.
+        """
+        rules = carrier.medications
+        if not rules or not applicant.medications:
+            return [], []
+
+        findings: List[Finding] = []
+        questions: List[str] = []
+
+        def hit(entry: str, med_keys: Set[str], raw_norm: str) -> bool:
+            for key in self._carrier_med_keys(entry):
+                if key in med_keys:
+                    return True
+                if len(key) >= 4 and re.search(rf"\b{re.escape(key)}\b", raw_norm):
+                    return True
+            return False
+
+        for med in applicant.medications:
+            if not med.matched and not med.raw:
+                continue
+            med_keys = self._applicant_med_keys(med)
+            raw_norm = normalize(med.raw)
+            label = med.brand or med.ingredient or med.raw
+
+            for tier, names in rules.rated():
+                if any(hit(name, med_keys, raw_norm) for name in names):
+                    verb = (
+                        "is on this carrier's uninsurable medication list"
+                        if tier == Tier.DECLINE
+                        else f"is on this carrier's {tier.key} medication list"
+                    )
+                    findings.append(
+                        Finding(
+                            rule_id=f"med_list_{tier.key}",
+                            outcome=tier,
+                            reason=f"{label} {verb}",
+                            citation=rules.source or None,
+                        )
+                    )
+                    break   # worst list wins; do not also report a lighter one
+
+            if any(hit(name, med_keys, raw_norm) for name in rules.ask):
+                questions.append(
+                    f"{label}: this carrier requires the reason for this "
+                    f"medication on the application."
+                )
+
+        return findings, questions
 
     def _improve_questions(self, findings: List[Finding]) -> None:
         """Replace fallback question wording with the catalog's own follow-up.
@@ -231,6 +322,7 @@ class Engine:
         tier: Tier,
         findings: List[Finding],
         applicant: Applicant,
+        med_questions: Optional[List[str]] = None,
     ) -> ProductResult:
         reasons = list(findings)
         if not any(f.outcome == Tier.DECLINE for f in findings):
@@ -255,7 +347,10 @@ class Engine:
             best_case_tier=Tier.DECLINE,
             eligible=False,
             findings=sorted(reasons, key=lambda f: -f.outcome.rank),
-            open_questions=[f.question for f in findings if f.pending and f.question],
+            open_questions=(
+                [f.question for f in findings if f.pending and f.question]
+                + list(med_questions or [])
+            ),
             notes=list(carrier.notes),
             am_best=carrier.am_best,
         )

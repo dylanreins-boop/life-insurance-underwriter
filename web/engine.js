@@ -556,8 +556,27 @@
     return interpolate(curve, applicant.age);
   }
 
+  /* Carriers routinely shrink the face maximum at older ages, so the headline
+   * maximum is not what an 82-year-old can actually buy. Mirrors
+   * Product.face_max_for / clamp_face in Python. */
+  function faceMaxFor(product, age) {
+    const bands = product.face_bands || [];
+    if (!bands.length) return product.face_max;
+    for (const [low, high, limit] of bands) {
+      if (low <= age && age <= high) return limit;
+    }
+    // A gap in the bands is a transcription mistake; in a quoting tool the safe
+    // direction to be wrong is downward.
+    return Math.min.apply(null, bands.map((b) => b[2]));
+  }
+
+  function clampFace(product, face, age) {
+    const ceiling = age == null ? product.face_max : faceMaxFor(product, age);
+    return Math.max(product.face_min, Math.min(ceiling, face));
+  }
+
   function quote(bundle, applicant, carrier, product, tierKey) {
-    const face = Math.max(product.face_min, Math.min(product.face_max, applicant.face_amount));
+    const face = clampFace(product, applicant.face_amount, applicant.age);
     const table = bundle.rate_tables ? bundle.rate_tables[carrier.id] : null;
     let rate = table ? lookupTable(table, applicant, tierKey) : null;
     let fee, monthlyFactor, illustrative, basis;
@@ -584,6 +603,26 @@
       basis,
     };
   }
+
+  /* A carrier's own named drug list. Some guides skip the diagnosis entirely
+   * and name the drugs outright, which is better evidence than inferring a
+   * condition from the drug and rating the condition. Mirrors
+   * Engine._evaluate_medication_list in Python. */
+  function carrierMedKeys(entry) {
+    const parts = [entry].concat(String(entry).split(/[/(),]/));
+    const keys = new Set();
+    for (const p of parts) {
+      const k = normalize(p);
+      if (k) keys.add(k);
+    }
+    return keys;
+  }
+
+  const MED_LIST_TIERS = [
+    ["decline", "decline"],
+    ["modified", "modified"],
+    ["graded", "graded"],
+  ];
 
   // ----------------------------------------------------------------- engine
   class Engine {
@@ -681,6 +720,72 @@
     /* Replace fallback question wording with the catalog's own follow-up, so
      * two carriers needing the same fact ask one readable question instead of
      * two rule-flavoured ones. Mirrors Engine._improve_questions in Python. */
+    applicantMedKeys(med) {
+      const keys = new Set([normalize(med.raw)]);
+      if (med.ingredient) {
+        keys.add(normalize(med.ingredient));
+        const drug = this.catalog.drugByIngredient.get(med.ingredient);
+        if (drug) for (const b of drug.brands || []) keys.add(normalize(b));
+      }
+      keys.delete("");
+      return keys;
+    }
+
+    evaluateMedicationList(applicant, carrier) {
+      const rules = carrier.medications;
+      if (!rules || !applicant.medications.length) return { findings: [], questions: [] };
+
+      const findings = [];
+      const questions = [];
+
+      const hit = (entry, medKeys, rawNorm) => {
+        for (const key of carrierMedKeys(entry)) {
+          if (medKeys.has(key)) return true;
+          if (key.length >= 4 && new RegExp("\\b" + escapeRe(key) + "\\b").test(rawNorm)) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      for (const med of applicant.medications) {
+        if (!med.matched && !med.raw) continue;
+        const medKeys = this.applicantMedKeys(med);
+        const rawNorm = normalize(med.raw);
+        const label = med.brand || med.ingredient || med.raw;
+
+        for (const [listName, tierKey] of MED_LIST_TIERS) {
+          const names = rules[listName] || [];
+          if (names.some((n) => hit(n, medKeys, rawNorm))) {
+            const verb =
+              tierKey === "decline"
+                ? "is on this carrier's uninsurable medication list"
+                : `is on this carrier's ${tierKey} medication list`;
+            findings.push({
+              rule_id: "med_list_" + tierKey,
+              outcome: tierKey,
+              reason: `${label} ${verb}`,
+              condition_id: null,
+              pending: false,
+              best_case: null,
+              question: null,
+              citation: rules.source || null,
+              unknown_keys: [],
+              default_question: false,
+            });
+            break;   // worst list wins
+          }
+        }
+
+        if ((rules.ask || []).some((n) => hit(n, medKeys, rawNorm))) {
+          questions.push(
+            `${label}: this carrier requires the reason for this medication on the application.`
+          );
+        }
+      }
+      return { findings, questions };
+    }
+
     improveQuestions(findings) {
       for (const f of findings) {
         if (!(f.pending && f.default_question && f.condition_id)) continue;
@@ -719,6 +824,9 @@
       }
       if (carrier.build) findings = findings.concat(evaluateBuild(carrier.build, applicant));
 
+      const med = this.evaluateMedicationList(applicant, carrier);
+      findings = findings.concat(med.findings);
+
       this.improveQuestions(findings);
       const settled = findings.filter((f) => !f.pending);
       const pending = findings.filter((f) => f.pending);
@@ -740,7 +848,10 @@
       const sorted = findings
         .slice()
         .sort((a, b) => TIERS[b.outcome].rank - TIERS[a.outcome].rank);
-      const openQuestions = pending.map((f) => f.question).filter(Boolean);
+      const openQuestions = pending
+        .map((f) => f.question)
+        .filter(Boolean)
+        .concat(med.questions);
 
       if (!product && !bestProduct) {
         const reasons = sorted.slice();
@@ -795,10 +906,12 @@
           "Guidelines are unverified defaults - confirm against the carrier's current field underwriting guide."
         );
       }
-      const face = Math.max(chosen.face_min, Math.min(chosen.face_max, applicant.face_amount));
+      const face = clampFace(chosen, applicant.face_amount, applicant.age);
       if (face !== applicant.face_amount) {
+        const ceiling = faceMaxFor(chosen, applicant.age);
+        const band = ceiling !== chosen.face_max ? ` at issue age ${applicant.age}` : "";
         notes.push(
-          `Face amount adjusted to $${face.toLocaleString()} to fit this product's $${chosen.face_min.toLocaleString()}-$${chosen.face_max.toLocaleString()} range.`
+          `Face amount adjusted to $${face.toLocaleString()} to fit this product's $${chosen.face_min.toLocaleString()}-$${ceiling.toLocaleString()} range${band}.`
         );
       }
 
@@ -870,5 +983,8 @@
     }
   }
 
-  return { Engine, Catalog, TIERS, normalize, ratio, mergeConditions, bmiOf, quote };
+  return {
+    Engine, Catalog, TIERS, normalize, ratio, mergeConditions, bmiOf, quote,
+    faceMaxFor, clampFace,
+  };
 });

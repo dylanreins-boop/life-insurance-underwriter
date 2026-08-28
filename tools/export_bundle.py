@@ -105,6 +105,8 @@ def main() -> int:
                         "issue_age_max": p.issue_age_max,
                         "face_min": p.face_min,
                         "face_max": p.face_max,
+                        "face_bands": [list(b) for b in p.face_bands],
+                        "verified": p.verified,
                         "benefit_schedule": p.benefit_schedule,
                         "bypass_underwriting": p.bypass_underwriting,
                         "states_excluded": p.states_excluded,
@@ -113,6 +115,17 @@ def main() -> int:
                     for p in c.products
                 ],
                 "rules": [rule_to_dict(r) for r in c.rules],
+                "medications": (
+                    {
+                        "decline": c.medications.decline,
+                        "graded": c.medications.graded,
+                        "modified": c.medications.modified,
+                        "ask": c.medications.ask,
+                        "source": c.medications.source,
+                    }
+                    if c.medications
+                    else None
+                ),
             }
             for c in carriers
         ],

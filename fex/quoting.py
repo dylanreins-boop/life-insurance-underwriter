@@ -154,7 +154,7 @@ def quote(
     tables: Optional[Dict[str, RateTable]] = None,
 ) -> Quote:
     """Price ``product`` for ``applicant`` at ``tier``."""
-    face = product.clamp_face(applicant.face_amount)
+    face = product.clamp_face(applicant.face_amount, applicant.age)
     table = (tables or {}).get(carrier.id)
 
     rate = table.lookup(applicant, tier) if table else None
@@ -202,7 +202,7 @@ def face_for_budget(
     if per_1000_monthly <= 0:
         return product.face_min, unit
     raw = 1000.0 * (monthly_budget - fee_monthly) / per_1000_monthly
-    face = max(product.face_min, min(product.face_max, round(raw / 250.0) * 250.0))
+    face = product.clamp_face(round(raw / 250.0) * 250.0, applicant.age)
     priced = Applicant(**{**applicant.__dict__, "face_amount": face})
     return face, quote(priced, carrier, product, tier, tables)
 

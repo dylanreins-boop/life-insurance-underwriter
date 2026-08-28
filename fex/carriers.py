@@ -32,12 +32,20 @@ class Product:
     issue_age_max: int = 120
     face_min: float = 0.0
     face_max: float = 1_000_000.0
+    #: (min_age, max_age, max_face) bands. Carriers routinely shrink the face
+    #: maximum at older ages, so quoting the headline maximum to an 82-year-old
+    #: would be wrong.
+    face_bands: List[tuple] = field(default_factory=list)
     benefit_schedule: str = ""
     #: Guaranteed issue plans ask no health questions, so they stay available
     #: even when the health rules produce a decline.
     bypass_underwriting: bool = False
     states_excluded: List[str] = field(default_factory=list)
     notes: List[str] = field(default_factory=list)
+    #: Documents cover products, not companies. A carrier's field guide often
+    #: describes two of its three plans, so verification is tracked per product
+    #: rather than being an all-or-nothing claim about the company.
+    verified: bool = False
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Product":
@@ -51,10 +59,15 @@ class Product:
             issue_age_max=int(ages.get("max", 120)),
             face_min=float(face.get("min", 0)),
             face_max=float(face.get("max", 1_000_000)),
+            face_bands=[
+                (int(b["ages"][0]), int(b["ages"][1]), float(b["max"]))
+                for b in (face.get("bands") or [])
+            ],
             benefit_schedule=data.get("benefit_schedule", ""),
             bypass_underwriting=bool(data.get("bypass_underwriting", False)),
             states_excluded=[s.upper() for s in (data.get("states_excluded") or [])],
             notes=list(data.get("notes") or []),
+            verified=bool(data.get("verified", False)),
         )
 
     def accepts_age(self, age: int) -> bool:
@@ -63,8 +76,65 @@ class Product:
     def accepts_state(self, state: Optional[str]) -> bool:
         return not state or state.upper() not in self.states_excluded
 
-    def clamp_face(self, face: float) -> float:
-        return max(self.face_min, min(self.face_max, face))
+    def face_max_for(self, age: int) -> float:
+        """Face maximum at this issue age, honouring any published age bands.
+
+        If bands are published but none covers this age, fall back to the
+        smallest of them rather than the headline maximum. A gap in the bands is
+        a transcription mistake, and in a quoting tool the safe direction to be
+        wrong is downward.
+        """
+        if not self.face_bands:
+            return self.face_max
+        for low, high, limit in self.face_bands:
+            if low <= age <= high:
+                return limit
+        return min(limit for _, _, limit in self.face_bands)
+
+    def clamp_face(self, face: float, age: Optional[int] = None) -> float:
+        ceiling = self.face_max if age is None else self.face_max_for(age)
+        return max(self.face_min, min(ceiling, face))
+
+
+@dataclass
+class MedicationRules:
+    """A carrier's own named medication list.
+
+    Some field guides skip the diagnosis entirely and name the drugs: "proposed
+    insureds currently taking any of the following are not eligible". That is a
+    more direct and more reliable signal than inferring a condition from the
+    drug and then rating the condition, so when a carrier publishes such a list
+    it is matched first.
+
+    ``ask`` is the "please state the reason for this medication on the
+    application" list. It does not change the tier; it raises a question.
+    """
+
+    decline: List[str] = field(default_factory=list)
+    graded: List[str] = field(default_factory=list)
+    modified: List[str] = field(default_factory=list)
+    ask: List[str] = field(default_factory=list)
+    source: str = ""
+
+    @classmethod
+    def from_dict(cls, data: Optional[Dict[str, Any]]) -> Optional["MedicationRules"]:
+        if not data:
+            return None
+        return cls(
+            decline=list(data.get("decline") or []),
+            graded=list(data.get("graded") or []),
+            modified=list(data.get("modified") or []),
+            ask=list(data.get("ask") or []),
+            source=data.get("source", ""),
+        )
+
+    def rated(self) -> List[tuple]:
+        """(tier, names) pairs, worst first, for the lists that change the tier."""
+        return [
+            (Tier.DECLINE, self.decline),
+            (Tier.MODIFIED, self.modified),
+            (Tier.GRADED, self.graded),
+        ]
 
 
 @dataclass
@@ -83,6 +153,7 @@ class Carrier:
     notes: List[str] = field(default_factory=list)
     states_excluded: List[str] = field(default_factory=list)
     extends: List[str] = field(default_factory=list)
+    medications: Optional[MedicationRules] = None
 
     def accepts_state(self, state: Optional[str]) -> bool:
         return not state or state.upper() not in self.states_excluded
@@ -131,6 +202,7 @@ def load_carrier(data: Dict[str, Any], packs: Dict[str, List[Rule]]) -> Carrier:
         notes=list(data.get("notes") or []),
         states_excluded=[s.upper() for s in (data.get("states_excluded") or [])],
         extends=extends,
+        medications=MedicationRules.from_dict(data.get("medications")),
     )
 
 

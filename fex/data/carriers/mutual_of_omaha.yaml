@@ -1,48 +1,144 @@
 id: mutual_of_omaha
-name: Mutual of Omaha
+name: Mutual of Omaha (United of Omaha)
 am_best: "A+"
+
+# The Living Promise guide settles the products, the build chart, the rates and
+# the medication list. It does NOT print the Part One / Part Two health
+# questions themselves - those live on the application - so the condition rules
+# below are still the shared market defaults. That is why the carrier flag stays
+# false while the individual products are marked verified.
 verified: false
-as_of: "2026-08"
+as_of: "Living Promise Product and Underwriting Guide, form 128042"
 source_note: >-
-  Seeded from general market knowledge of this carrier's final expense
-  portfolio. Not transcribed from the carrier's field underwriting guide.
-  Verify every rule against the current guide before quoting a client.
-rate_index: 0.97
-underwriting_style: Point-of-sale decision with prescription check and MIB.
+  Products, build chart, premium rates, policy fee, modal factors and the
+  medication list are transcribed from the Living Promise Product and
+  Underwriting Guide (form 128042). The Part One and Part Two health questions
+  are not printed in that guide, so the condition rules remain unverified market
+  defaults until the Living Promise application is supplied.
+
+rate_index: 1.0
+underwriting_style: >-
+  Point-of-sale decision through an Apptical phone interview, with an MIB check
+  and a prescription history check run during the call.
+states_excluded: [NY]      # United of Omaha does not conduct business in New York
 notes:
-  - Strong brand recognition, which helps at the kitchen table.
-  - Level and Graded are separate plans; the application determines which one issues.
+  - "Application structure: any Part One 'yes' means no coverage at all; any Part Two
+     'yes' means the Graded plan only; all 'no' answers mean the Level plan."
+  - "Non-tobacco rates require no tobacco or nicotine in any form - gum, patches,
+     cigars included - for the 12 months before the application."
+  - "Combined limits: no more than $40,000 of Living Promise Level, and no more than
+     $50,000 of all simplified issue coverage with United of Omaha. Graded is capped
+     at $20,000, and $25,000 across all graded coverage with United of Omaha."
+  - "Suicide exclusion for both plans: premiums returned, less any loan, within two
+     years of the contestability date (one year in ND)."
+
+# Printed height/weight chart, in pounds. Reproduced exactly from the guide.
 build:
-  bmi: {min: 17, level_max: 40, graded_max: 46}
+  source: Living Promise build chart (form 128042)
+  chart:
+    56: {min: 74,  level_max: 204, graded_max: 221}   # 4'8"
+    57: {min: 77,  level_max: 209, graded_max: 225}
+    58: {min: 79,  level_max: 214, graded_max: 231}
+    59: {min: 82,  level_max: 220, graded_max: 237}
+    60: {min: 85,  level_max: 226, graded_max: 244}   # 5'0"
+    61: {min: 88,  level_max: 233, graded_max: 250}
+    62: {min: 91,  level_max: 239, graded_max: 257}
+    63: {min: 94,  level_max: 246, graded_max: 264}
+    64: {min: 97,  level_max: 252, graded_max: 270}
+    65: {min: 100, level_max: 259, graded_max: 277}
+    66: {min: 103, level_max: 268, graded_max: 285}
+    67: {min: 106, level_max: 275, graded_max: 293}
+    68: {min: 109, level_max: 283, graded_max: 300}
+    69: {min: 112, level_max: 291, graded_max: 309}
+    70: {min: 115, level_max: 300, graded_max: 316}   # 5'10"
+    71: {min: 119, level_max: 307, graded_max: 325}
+    72: {min: 122, level_max: 315, graded_max: 333}   # 6'0"
+    73: {min: 126, level_max: 322, graded_max: 340}
+    74: {min: 129, level_max: 331, graded_max: 349}
+    75: {min: 133, level_max: 339, graded_max: 358}
+    76: {min: 136, level_max: 348, graded_max: 367}
+    77: {min: 140, level_max: 357, graded_max: 376}
+    78: {min: 143, level_max: 366, graded_max: 385}
+    79: {min: 147, level_max: 375, graded_max: 394}
+    80: {min: 151, level_max: 385, graded_max: 405}
+    81: {min: 154, level_max: 395, graded_max: 415}
+    82: {min: 158, level_max: 407, graded_max: 427}   # 6'10"
+
 products:
   - id: living_promise_level
     name: Living Promise Level Benefit
     tier: level
+    verified: true
     issue_ages: {min: 45, max: 85}
     face: {min: 2000, max: 40000}
     benefit_schedule: Full death benefit from day one.
+    notes:
+      - "In WA the minimum face amount is $5,000."
+      - "Underwriting classes: Standard Tobacco and Standard Nontobacco."
+
   - id: living_promise_graded
     name: Living Promise Graded Benefit
     tier: graded
+    verified: true
     issue_ages: {min: 45, max: 80}
     face: {min: 2000, max: 20000}
-    benefit_schedule: Years 1-2 pay 40% of face; full benefit from year 3.
+    states_excluded: [AR, MT, NC]
+    benefit_schedule: >-
+      Death from natural causes in the first two years returns all premiums paid
+      plus 10 percent; the full benefit is paid after two years. Accidental death
+      pays the full benefit in all years.
+    notes:
+      - "In WA the minimum face amount is $5,000."
+      - "One underwriting class - there is no tobacco distinction on this plan."
+
   - id: gwl
     name: Guaranteed Whole Life
     tier: gi
+    verified: false
     bypass_underwriting: true
     issue_ages: {min: 45, max: 85}
     face: {min: 2000, max: 25000}
     benefit_schedule: Return of premium plus 10% for the first 2 years; full benefit after.
+    notes:
+      - "Not covered by the Living Promise guide - these specs are still an
+         unverified default. Supply the Guaranteed Whole Life guide to confirm them."
+
+# Transcribed from the guide's medication list. Drugs marked with an asterisk in
+# the guide "may qualify for the Graded benefit product"; the rest make the
+# applicant ineligible for Living Promise entirely.
+medications:
+  source: Living Promise medication list (form 128042)
+  decline:
+    [Abacavir, Alkeran, Aricept, Atripla, Campath, Caprelsa, Casodex, Cellcept,
+     Cognex, Combivir, Crixivan, Cyclosporine, Cytoxan, Donepezil, Droxia,
+     Eligard, Epivir Hbv, Ergoloid Mesylates, Exelon, Floxuridine, Fluorouracil,
+     Galantamine Hydrobromide, Gammagard, Gamunex, Gengraf, Hydrea, Hydroxyurea,
+     Invirase, Isentress, Keytruda, Leucovorin Calcium, Lexiva, Megace,
+     Megestrol Acetate (Megace), Mitomycin, Mycophenolate Mofetil, Myfortic,
+     Namenda, Neupogen, Opdivo, Panretin, Prograf, Razadyne, Retrovir, Revlimid,
+     Rituxan, Sandimmune, Stribild, Sustiva, Targretin, Teslac, Viracept,
+     Viramune, Viread, Zenapax, Zerit, Ziagen, Zidovudine, Zoladex]
+  graded:
+    [Amiodarone, Ampyra, Anoro Ellipta, Antabuse, Avonex, Azilect, Betaseron,
+     Calcium Acetate, Campral, Carbidopa/Levodopa, Chlorpromazine Hcl, Clozapine,
+     Copaxone, Daliresp, Geodon, Haldol, Haloperidol, Invega, Latuda, Lithium,
+     Naloxone Hcl, Naltrexone Hcl, Perphenazine, Ranexa, Rebif, Revia, Ribavirin,
+     Risperdal, Saphris, Sinemet, Spiriva, Stalevo, Suboxone, Symbyax, Tudorza,
+     Zyprexa]
+  ask:
+    [Abilify, Aggrenox, Arimidex, Baraclude, Carvedilol, Clopidogrel, Coreg,
+     Coumadin, Digitek, Digoxin, Eliquis, Enoxaparin Sodium, Femara, Infergen,
+     Lanoxin, Lovenox, Pegasys, Peg-Intron, Plavix, Pradaxa, Seroquel, Tamoxifen,
+     Truvada, Warfarin, Xarelto]
+
 underwriting:
-  extends: [core_knockouts, level_screen_standard, graded_screen_standard]
-  rules:
-    - id: moo_insulin_early
-      label: Insulin started before age 30
-      conditions: [diabetes_type1, diabetes_type2]
-      when: {age_at_diagnosis: {lt: 30}, insulin: true}
-      outcome: decline
-    - id: moo_copd
-      label: COPD or emphysema
-      conditions: [copd]
-      outcome: graded
+  # The health questions themselves are not in the guide, so these remain the
+  # shared market defaults. The two carrier-specific rules that used to sit here
+  # were invented rather than sourced, and have been removed.
+  #
+  # Deliberately no graded_screen: the guide describes exactly two underwritten
+  # outcomes. A Part One 'yes' ends the application and a Part Two 'yes' means
+  # the Graded plan, so there is no third, worse tier to fall to. Including the
+  # graded screen produced 'modified' findings, and because Living Promise has
+  # no modified plan those were silently landing clients on guaranteed issue.
+  extends: [core_knockouts, level_screen_standard]

@@ -71,7 +71,7 @@
     const per1000 = unit.monthly - feeMonthly;
     if (per1000 <= 0) return product.face_min;
     const raw = (1000 * (budget - feeMonthly)) / per1000;
-    return Math.max(product.face_min, Math.min(product.face_max, Math.round(raw / 250) * 250));
+    return FEX.clampFace(product, Math.round(raw / 250) * 250, applicant.age);
   }
 
   // ----------------------------------------------------------- rendering

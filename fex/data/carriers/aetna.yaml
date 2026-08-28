@@ -1,35 +1,83 @@
 id: aetna
-name: Aetna (CVS Health)
+name: Aetna (American Continental Insurance Company)
 am_best: "A"
+
+# The document supplied is the consumer brochure (form ACIFE01732 092718), which
+# settles the plan structure, issue ages, face bands, benefit schedules and the
+# policy fee. It contains no health questions, no build chart and no rates, and
+# it is from 2018 - so nothing here is marked verified. The plan structure below
+# is nevertheless document-derived and replaces an earlier guess that had this
+# carrier selling Preferred / Standard / Graded, which is not its line-up.
 verified: false
-as_of: "2026-08"
+as_of: "Consumer brochure ACIFE01732, dated 09/2018"
 source_note: >-
-  Seeded from general market knowledge of this carrier's final expense
-  portfolio. Verify against the current field underwriting guide.
+  Plans, issue ages, age-banded face maximums, benefit schedules and the $40
+  policy fee come from the American Continental Final Expense consumer brochure
+  (form ACIFE01732 092718). Health questions, build chart and rates are not in
+  that brochure, so the underwriting rules remain unverified market defaults.
+  The brochure is from 2018 and may be out of date; the current field
+  underwriting guide is needed to confirm any of it.
+
 rate_index: 1.00
-underwriting_style: Three-tier application (Preferred / Standard / Graded) with Rx check.
+underwriting_style: >-
+  Simplified issue with no medical exam. The plan issued depends on the answers
+  to the application's health questions.
 notes:
-  - Preferred class is genuinely attainable for a healthy senior, which is unusual in this space.
+  - "Three plans: Level, Graded and Modified. The graded and modified plans pay a
+     reduced benefit for non-accidental death in the first two policy years."
+  - "Annual policy fee is $40 on all three plans. Premiums shown here still use the
+     illustrative model's $36 fee, because no Aetna rate table has been loaded."
+
 build:
-  bmi: {min: 17, preferred_max: 33, level_max: 40, graded_max: 46}
+  bmi: {min: 17, level_max: 40, graded_max: 46}
+
 products:
-  - id: protection_preferred
-    name: Protection Series - Preferred
-    tier: preferred
-    issue_ages: {min: 40, max: 89}
-    face: {min: 2000, max: 50000}
-    benefit_schedule: Full death benefit from day one at the carrier's best rate.
-  - id: protection_standard
-    name: Protection Series - Standard
+  - id: level
+    name: Final Expense - Level Benefit
     tier: level
-    issue_ages: {min: 40, max: 89}
-    face: {min: 2000, max: 50000}
+    verified: false
+    issue_ages: {min: 45, max: 89}
+    face:
+      min: 3000
+      max: 35000
+      bands:
+        - {ages: [45, 65], max: 35000}
+        - {ages: [66, 80], max: 25000}
+        - {ages: [81, 85], max: 15000}
+        - {ages: [86, 89], max: 10000}
     benefit_schedule: Full death benefit from day one.
-  - id: protection_graded
-    name: Protection Series - Graded
+
+  - id: graded
+    name: Final Expense - Graded Benefit
     tier: graded
-    issue_ages: {min: 40, max: 89}
-    face: {min: 2000, max: 25000}
-    benefit_schedule: Years 1-2 pay 30% / 70% of face; full benefit from year 3.
+    verified: false
+    issue_ages: {min: 45, max: 80}
+    face:
+      min: 3000
+      max: 35000
+      bands:
+        - {ages: [45, 65], max: 35000}
+        - {ages: [66, 80], max: 25000}
+    benefit_schedule: >-
+      Non-accidental death pays 40% of the benefit in policy year 1 and 75% in
+      year 2; the full benefit is paid from year 3. Accidental death pays the
+      full benefit immediately.
+
+  - id: modified
+    name: Final Expense - Modified Benefit
+    tier: modified
+    verified: false
+    issue_ages: {min: 45, max: 75}
+    face:
+      min: 3000
+      max: 35000
+      bands:
+        - {ages: [45, 65], max: 35000}
+        - {ages: [66, 75], max: 25000}
+    benefit_schedule: >-
+      Non-accidental death in policy years 1 and 2 returns 110% of earned
+      premium; the full benefit is paid from year 3. Accidental death pays the
+      full benefit immediately.
+
 underwriting:
-  extends: [preferred_screen, core_knockouts, level_screen_standard, graded_screen_standard]
+  extends: [core_knockouts, level_screen_standard, graded_screen_standard]

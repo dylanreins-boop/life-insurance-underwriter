@@ -195,6 +195,38 @@ fex lookup "congestive heart failure"
 fex rates template mutual_of_omaha  # starter rate file to fill in
 ```
 
+## Verification status
+
+Not every carrier file carries the same weight. `fex carriers` reports, per
+carrier, whether the underwriting rules came from a document, how many products
+were transcribed, whether the premiums come from a real rate table or the
+illustrative model, and whether the carrier publishes its own medication list:
+
+```
+Mutual of Omaha (United of Omaha)  A+  gi, level, graded
+    rules: default  |  products: 2/3  |  rates  |  drug list
+```
+
+Mutual of Omaha is the worked example. Its build chart, rate tables, policy fee,
+modal factors, product specs and medication list are transcribed from the Living
+Promise Product and Underwriting Guide (form 128042). Its health-question rules
+are still defaults, because that guide does not print the Part One and Part Two
+questions — those live on the application.
+
+Three features exist because real documents demanded them:
+
+- **Carrier medication lists.** Some guides skip the diagnosis and name the
+  drugs outright. That is better evidence than inferring a condition from a drug
+  and then rating the condition, so a named list is matched directly — including
+  the "may still qualify for graded" sub-list and the "state the reason on the
+  application" list, which raises a question rather than a rating.
+- **Age-banded face maximums.** A carrier's headline maximum is often not what
+  an 82-year-old can buy. Bands are honoured in quoting, and a gap in the bands
+  falls back to the smallest band rather than the headline number.
+- **Per-product verification.** Documents cover products, not companies. A field
+  guide describing two of a carrier's three plans marks two products verified
+  and leaves the third flagged as a default.
+
 ## Adding a carrier
 
 Copy any file in `fex/data/carriers/`, change the ids, point `extends:` at the
@@ -208,8 +240,9 @@ actually exists, so a typo fails the build rather than silently never firing.
 python -m unittest discover -s tests -v
 ```
 
-65 tests covering the rule evaluator, build charts, the medication matcher,
-data integrity across all 30 carrier files, end-to-end scenarios, and a parity
-suite that runs twenty cases through both the Python and JavaScript engines and
-compares tiers, products, premiums, reasons and questions. `web/engine.js` is a
-port, not a reimplementation, so any drift between the two is a bug.
+87 tests covering the rule evaluator, build charts, the medication matcher,
+data integrity across all 30 carrier files, end-to-end scenarios, values pinned
+directly to transcribed carrier documents, and a parity suite that runs twenty
+cases through both the Python and JavaScript engines and compares tiers,
+products, premiums, reasons and questions. `web/engine.js` is a port, not a
+reimplementation, so any drift between the two is a bug.

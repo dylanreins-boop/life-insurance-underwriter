@@ -134,18 +134,46 @@ def cmd_quote(args: argparse.Namespace) -> int:
 
 def cmd_carriers(args: argparse.Namespace) -> int:
     engine = Engine.load()
+    tables = engine.rate_tables
     for carrier in sorted(engine.carriers, key=lambda c: c.name):
         tiers = ", ".join(sorted({p.tier.key for p in carrier.products}, key=len))
-        mark = "verified" if carrier.verified else "unverified"
-        print(f"{carrier.name[:38]:<40}{carrier.am_best or '-':<6}{tiers:<32}{mark}")
+        done = sum(1 for p in carrier.products if p.verified)
+        marks = []
+        marks.append("rules" if carrier.verified else "rules: default")
+        marks.append(f"products: {done}/{len(carrier.products)}")
+        table = tables.get(carrier.id)
+        marks.append("rates" if table and not table.illustrative else "rates: model")
+        if carrier.medications:
+            marks.append("drug list")
+        print(
+            f"{carrier.name[:36]:<38}{carrier.am_best or '-':<6}{tiers:<30}"
+            f"{'  |  '.join(marks)}"
+        )
         if args.verbose:
             for product in carrier.products:
-                print(
-                    f"    {product.name[:44]:<46}{product.tier.key:<10}"
-                    f"ages {product.issue_age_min}-{product.issue_age_max}  "
-                    f"${product.face_min:,.0f}-${product.face_max:,.0f}"
+                flag = "verified" if product.verified else "default"
+                ceiling = product.face_max
+                bands = (
+                    "  bands: "
+                    + ", ".join(f"{lo}-{hi}:${m:,.0f}" for lo, hi, m in product.face_bands)
+                    if product.face_bands
+                    else ""
                 )
-    print(f"\n{len(engine.carriers)} carriers")
+                print(
+                    f"    {product.name[:40]:<42}{product.tier.key:<10}"
+                    f"ages {product.issue_age_min}-{product.issue_age_max}  "
+                    f"${product.face_min:,.0f}-${ceiling:,.0f}  {flag}{bands}"
+                )
+    verified_products = sum(
+        1 for c in engine.carriers for p in c.products if p.verified
+    )
+    total_products = sum(len(c.products) for c in engine.carriers)
+    real_rates = sum(1 for t in tables.values() if not t.illustrative)
+    print(
+        f"\n{len(engine.carriers)} carriers, {total_products} products "
+        f"({verified_products} transcribed from a carrier document), "
+        f"{real_rates} real rate table(s)"
+    )
     return 0
 
 

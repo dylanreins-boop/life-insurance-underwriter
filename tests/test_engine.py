@@ -267,6 +267,196 @@ class DataIntegrityTests(unittest.TestCase):
         self.assertEqual(rule.when["months_since_event"]["lt"], 12)
 
 
+class MutualOfOmahaTests(unittest.TestCase):
+    """Values pinned directly to the Living Promise guide (form 128042).
+
+    These exist so a later edit that corrupts a transcribed number fails loudly
+    rather than quietly mispricing a case.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.engine = Engine.load()
+        cls.carrier = next(c for c in cls.engine.carriers if c.id == "mutual_of_omaha")
+
+    def run_case(self, **kw):
+        kw.setdefault("height_in", 66)
+        kw.setdefault("weight_lb", 160)
+        report = self.engine.run(**kw)
+        return next(
+            (r for r in report.results if r.carrier_id == "mutual_of_omaha"), None
+        ), report
+
+    # -- build chart ---------------------------------------------------
+    def test_build_chart_matches_the_printed_table(self):
+        for height, minimum, level_max, graded_max in [
+            (56, 74, 204, 221),    # 4'8", the first row
+            (66, 103, 268, 285),   # 5'6"
+            (70, 115, 300, 316),   # 5'10"
+            (82, 158, 407, 427),   # 6'10", the last row
+        ]:
+            row = self.carrier.build.limits_for(height)
+            self.assertEqual(row["min"], minimum, f"min at {height}in")
+            self.assertEqual(row["level_max"], level_max, f"level max at {height}in")
+            self.assertEqual(row["graded_max"], graded_max, f"graded max at {height}in")
+
+    def test_build_moves_level_to_graded_at_the_printed_line(self):
+        # 5'6": level to 268 lb, graded to 285 lb.
+        at_limit, _ = self.run_case(age=60, height_in=66, weight_lb=268)
+        over, _ = self.run_case(age=60, height_in=66, weight_lb=269)
+        self.assertEqual(at_limit.tier, Tier.LEVEL)
+        self.assertEqual(over.tier, Tier.GRADED)
+
+    def test_build_past_the_graded_column_declines(self):
+        over, _ = self.run_case(age=60, height_in=66, weight_lb=286)
+        self.assertEqual(over.tier, Tier.GI)   # only the GI plan survives
+        self.assertNotEqual(over.product_id, "living_promise_graded")
+
+    # -- rates ---------------------------------------------------------
+    def test_rate_table_is_real_not_illustrative(self):
+        table = self.engine.rate_tables["mutual_of_omaha"]
+        self.assertFalse(table.illustrative)
+        self.assertEqual(table.policy_fee_annual, 36.0)
+        self.assertEqual(table.monthly_factor, 0.089)
+
+    def test_premium_matches_the_printed_rate(self):
+        # Age 68 male non-tobacco level is $71.15 per $1,000 per year.
+        result, _ = self.run_case(age=68, gender="male", face_amount=10000)
+        expected_annual = 71.15 * 10 + 36.0
+        self.assertEqual(result.tier, Tier.LEVEL)
+        self.assertAlmostEqual(result.quote.annual, expected_annual, places=6)
+        self.assertAlmostEqual(result.quote.monthly, expected_annual * 0.089, places=6)
+        self.assertFalse(result.quote.illustrative)
+
+    def test_graded_plan_has_no_tobacco_distinction(self):
+        table = self.engine.rate_tables["mutual_of_omaha"]
+        for gender in ("male", "female"):
+            clean = table.lookup(Applicant(age=70, gender=gender), Tier.GRADED)
+            smoker = table.lookup(
+                Applicant(age=70, gender=gender, tobacco=True), Tier.GRADED
+            )
+            self.assertEqual(clean, smoker, gender)
+
+    def test_level_plan_does_have_a_tobacco_distinction(self):
+        table = self.engine.rate_tables["mutual_of_omaha"]
+        clean = table.lookup(Applicant(age=70), Tier.LEVEL)
+        smoker = table.lookup(Applicant(age=70, tobacco=True), Tier.LEVEL)
+        self.assertGreater(smoker, clean)
+
+    # -- medication list ------------------------------------------------
+    def test_uninsurable_drug_declines_the_underwritten_plans(self):
+        result, _ = self.run_case(age=70, medications=["Aricept"])
+        self.assertEqual(result.tier, Tier.GI)
+        self.assertNotEqual(result.product_id, "living_promise_level")
+
+    def test_asterisked_drug_lands_on_graded_not_decline(self):
+        # Spiriva carries an asterisk: "may qualify for the Graded benefit".
+        result, _ = self.run_case(age=70, medications=["Spiriva"])
+        self.assertEqual(result.tier, Tier.GRADED)
+        self.assertTrue(
+            any("medication list" in r for r in result.blocking_reasons),
+            result.blocking_reasons,
+        )
+
+    def test_drug_list_matches_the_generic_too(self):
+        brand, _ = self.run_case(age=70, medications=["Aricept"])
+        generic, _ = self.run_case(age=70, medications=["donepezil 10mg"])
+        self.assertEqual(brand.tier, generic.tier)
+
+    def test_additional_information_drug_asks_rather_than_rates(self):
+        result, _ = self.run_case(age=70, medications=["Eliquis"])
+        self.assertEqual(result.tier, Tier.LEVEL)      # not rated
+        self.assertTrue(
+            any("reason for this medication" in q for q in result.open_questions),
+            result.open_questions,
+        )
+
+    def test_drug_not_on_any_list_is_left_alone(self):
+        result, _ = self.run_case(age=70, medications=["atorvastatin"])
+        self.assertEqual(result.tier, Tier.LEVEL)
+
+    # -- products and states --------------------------------------------
+    def test_living_promise_products_are_marked_verified(self):
+        by_id = {p.id: p for p in self.carrier.products}
+        self.assertTrue(by_id["living_promise_level"].verified)
+        self.assertTrue(by_id["living_promise_graded"].verified)
+        # The guide does not cover the guaranteed issue plan.
+        self.assertFalse(by_id["gwl"].verified)
+
+    def test_carrier_stays_unverified_until_the_application_arrives(self):
+        # Build, rates and the drug list are transcribed, but the Part One and
+        # Part Two health questions are not in this guide.
+        self.assertFalse(self.carrier.verified)
+
+    def test_not_sold_in_new_york(self):
+        _, report = self.run_case(age=65, state="NY")
+        self.assertNotIn("mutual_of_omaha", {r.carrier_id for r in report.results})
+
+    def test_graded_plan_is_unavailable_in_three_states(self):
+        for state in ("AR", "MT", "NC"):
+            result, _ = self.run_case(
+                age=60, state=state, height_in=66, weight_lb=280   # over the level line
+            )
+            self.assertNotEqual(
+                result.product_id, "living_promise_graded", f"graded offered in {state}"
+            )
+
+    def test_face_limits_match_the_guide(self):
+        by_id = {p.id: p for p in self.carrier.products}
+        self.assertEqual(by_id["living_promise_level"].face_max, 40000)
+        self.assertEqual(by_id["living_promise_level"].face_min, 2000)
+        self.assertEqual(by_id["living_promise_graded"].face_max, 20000)
+        self.assertEqual((by_id["living_promise_level"].issue_age_min,
+                          by_id["living_promise_level"].issue_age_max), (45, 85))
+        self.assertEqual((by_id["living_promise_graded"].issue_age_min,
+                          by_id["living_promise_graded"].issue_age_max), (45, 80))
+
+
+class FaceBandTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.engine = Engine.load()
+        cls.aetna = next(c for c in cls.engine.carriers if c.id == "aetna")
+
+    def product(self, pid):
+        return next(p for p in self.aetna.products if p.id == pid)
+
+    def test_face_maximum_shrinks_with_issue_age(self):
+        level = self.product("level")
+        self.assertEqual(level.face_max_for(60), 35000)
+        self.assertEqual(level.face_max_for(70), 25000)
+        self.assertEqual(level.face_max_for(82), 15000)
+        self.assertEqual(level.face_max_for(88), 10000)
+
+    def test_quote_is_capped_at_the_band(self):
+        report = self.engine.run(
+            age=82, gender="male", height_in=68, weight_lb=170, face_amount=35000
+        )
+        result = next(r for r in report.results if r.carrier_id == "aetna")
+        self.assertEqual(result.quote.face_amount, 15000)
+        self.assertTrue(
+            any("issue age 82" in n for n in result.notes), result.notes
+        )
+
+    def test_gap_in_the_bands_falls_back_conservatively(self):
+        from fex.carriers import Product
+        product = Product.from_dict({
+            "id": "x", "name": "X", "tier": "level",
+            "face": {"min": 1000, "max": 50000,
+                     "bands": [{"ages": [45, 65], "max": 40000},
+                               {"ages": [66, 80], "max": 20000}]},
+        })
+        self.assertEqual(product.face_max_for(70), 20000)
+        self.assertEqual(product.face_max_for(90), 20000)   # not the 50000 headline
+
+    def test_no_bands_means_the_headline_maximum(self):
+        from fex.carriers import Product
+        product = Product.from_dict({
+            "id": "x", "name": "X", "tier": "level", "face": {"min": 1000, "max": 30000},
+        })
+        self.assertEqual(product.face_max_for(70), 30000)
+
+
 class QuotingTests(unittest.TestCase):
     def setUp(self):
         self.engine = Engine.load()
