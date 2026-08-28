@@ -391,6 +391,23 @@ class EndToEndTests(unittest.TestCase):
         report = self.run_case(age=68, conditions=["sugar"])
         self.assertEqual(report.applicant.find("diabetes_type2").raw, "sugar")
 
+    def test_reason_does_not_restate_the_condition(self):
+        report = self.run_case(age=68, conditions=["heart_attack"])
+        americo = next(r for r in report.results if r.carrier_id == "americo")
+        self.assertEqual(
+            americo.blocking_reasons, ["Heart attack within 12 months (unconfirmed)"]
+        )
+
+    def test_reason_echoes_the_clients_own_words(self):
+        report = self.run_case(age=68, conditions=["mini stroke"])
+        reasons = [r for res in report.results for r in res.blocking_reasons]
+        self.assertTrue(any(r.startswith("mini stroke:") for r in reasons))
+
+    def test_reason_names_the_medication_it_came_from(self):
+        report = self.run_case(age=68, medications=["Aricept"])
+        reasons = [r for res in report.results for r in res.blocking_reasons]
+        self.assertTrue(any("Aricept (from medication)" in r for r in reasons))
+
     def test_rule_supplied_questions_are_not_overwritten(self):
         report = self.run_case(age=68, conditions=["aneurysm"])
         self.assertIn(

@@ -217,8 +217,12 @@
         // When the caller passed an id (a picker selection rather than typed
         // text), show the catalog's label so generated questions read as
         // English rather than as an identifier.
-        const raw = String(name) === id ? this.label(id) : String(name);
-        parsed.push({ id, attrs: Object.assign({}, attrs), raw, inferred_from: null });
+        const fromPicker = String(name) === id;
+        const raw = fromPicker ? this.label(id) : String(name);
+        parsed.push({
+          id, attrs: Object.assign({}, attrs), raw,
+          inferred_from: null, verbatim: !fromPicker,
+        });
       }
       return { conditions: mergeConditions(parsed), unmatched };
     }
@@ -261,13 +265,17 @@
           attrs: Object.assign({}, entry.attrs),
           raw: entry.raw,
           inferred_from: entry.inferred_from || null,
+          verbatim: entry.verbatim !== false,
         });
         continue;
       }
       for (const [k, v] of Object.entries(entry.attrs || {})) {
         if (!(k in existing.attrs)) existing.attrs[k] = v;
       }
-      if (existing.raw == null) existing.raw = entry.raw;
+      if (existing.raw == null) {
+        existing.raw = entry.raw;
+        existing.verbatim = entry.verbatim !== false;
+      }
       if (!entry.inferred_from) existing.inferred_from = null;
     }
     return Array.from(merged.values());
@@ -355,7 +363,9 @@
 
   function describe(rule, entry) {
     if (rule.reason) return rule.reason;
-    if (entry && entry.raw) return entry.raw + ": " + rule.label;
+    // Echo the client's own words, or the drug the condition came from; a
+    // catalog label would only restate the rule.
+    if (entry && entry.raw && entry.verbatim !== false) return entry.raw + ": " + rule.label;
     return rule.label;
   }
 
@@ -607,6 +617,7 @@
             attrs: Object.assign({}, (drug.set || {})[condId] || {}),
             raw: `${label} (from medication)`,
             inferred_from: label,
+            verbatim: true,
           });
         }
         for (const flag of drug.flags || []) {
@@ -615,6 +626,7 @@
             attrs: {},
             raw: `${label} (from medication)`,
             inferred_from: label,
+            verbatim: true,
           });
         }
         if (drug.confidence === "medium" && drug.note) questions.push(`${label}: ${drug.note}`);

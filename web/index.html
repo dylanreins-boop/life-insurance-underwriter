@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Final Expense Underwriter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@600;700&display=swap">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,92 +15,101 @@
     <h1>Final Expense Underwriter</h1>
     <span class="sub">Eligibility and pricing across every carrier in the file</span>
     <span class="spacer"></span>
-    <span class="sub" id="generated"></span>
+    <span class="sub mono" id="generated"></span>
   </div>
 </header>
 <div class="disclaimer"><div class="inner">
-  <b>Unverified defaults.</b> Carrier guidelines here were seeded from general market knowledge, not
-  transcribed from any carrier's field underwriting guide, and premiums marked * come from an
-  illustrative model rather than a rate book. Use this to narrow the field, then confirm with the
-  carrier.
+  <b>Unverified defaults</b> &mdash; carrier guidelines here were seeded from general market knowledge,
+  not transcribed from any carrier's field underwriting guide, and premiums marked * come from an
+  illustrative model rather than a rate book. Narrow the field here, then confirm with the carrier.
 </div></div>
 
 <div class="wrap">
 <div class="cols">
 
-  <div>
-    <div class="panel sticky">
-      <h2>Applicant</h2>
-      <div class="row two">
-        <div><label for="age">Age</label><input type="number" id="age" min="18" max="95"></div>
-        <div><label for="state">State</label><input type="text" id="state" maxlength="2" placeholder="optional"></div>
-      </div>
-      <div class="row"><div>
-        <label>Gender</label>
-        <div class="seg" id="gender">
-          <button type="button" data-value="male" aria-pressed="false">Male</button>
-          <button type="button" data-value="female" aria-pressed="true">Female</button>
+  <div class="rail">
+    <section class="card">
+      <div class="hd"><h2>Case file</h2></div>
+      <div class="bd">
+        <div class="row two">
+          <div><label for="age">Age</label><input type="number" id="age" min="18" max="95"></div>
+          <div><label for="state">State</label><input type="text" id="state" maxlength="2" placeholder="opt"></div>
         </div>
-      </div></div>
-      <div class="check">
-        <input type="checkbox" id="tobacco"><label for="tobacco">Uses tobacco</label>
-      </div>
-
-      <div class="row three">
-        <div><label for="feet">Height ft</label><input type="number" id="feet" min="4" max="7"></div>
-        <div><label for="inches">in</label><input type="number" id="inches" min="0" max="11"></div>
-        <div><label for="weight">Weight lb</label><input type="number" id="weight" min="70" max="500"></div>
-      </div>
-      <div class="bmi-line" id="bmi"></div>
-
-      <div class="row" style="margin-top:14px"><div>
-        <label>Solve for</label>
-        <div class="seg" id="mode">
-          <button type="button" data-value="face" aria-pressed="true">Face amount</button>
-          <button type="button" data-value="budget" aria-pressed="false">Monthly budget</button>
+        <div class="row"><div>
+          <label id="gender-label">Gender</label>
+          <div class="seg" id="gender" role="group" aria-labelledby="gender-label">
+            <button type="button" data-value="male" aria-pressed="false">Male</button>
+            <button type="button" data-value="female" aria-pressed="true">Female</button>
+          </div>
+        </div></div>
+        <div class="check">
+          <input type="checkbox" id="tobacco"><label for="tobacco">Uses tobacco</label>
         </div>
-      </div></div>
-      <div class="row" id="face-wrap"><div>
-        <label for="face">Face amount</label><input type="number" id="face" min="1000" max="50000" step="500">
-      </div></div>
-      <div class="row" id="budget-wrap" style="display:none"><div>
-        <label for="budget">Monthly budget</label><input type="number" id="budget" min="10" max="800" step="5">
-      </div></div>
-    </div>
+
+        <div class="row three">
+          <div><label for="feet">Height ft</label><input type="number" id="feet" min="4" max="7"></div>
+          <div><label for="inches">in</label><input type="number" id="inches" min="0" max="11"></div>
+          <div><label for="weight">Weight lb</label><input type="number" id="weight" min="70" max="500"></div>
+        </div>
+        <div class="row"><div class="bmi-line" id="bmi"></div></div>
+
+        <div class="row"><div>
+          <label id="mode-label">Solve for</label>
+          <div class="seg" id="mode" role="group" aria-labelledby="mode-label">
+            <button type="button" data-value="face" aria-pressed="true">Face</button>
+            <button type="button" data-value="budget" aria-pressed="false">Budget</button>
+          </div>
+        </div></div>
+        <div class="row" id="face-wrap"><div>
+          <label for="face">Face amount</label><input type="number" id="face" min="1000" max="50000" step="500">
+        </div></div>
+        <div class="row" id="budget-wrap" style="display:none"><div>
+          <label for="budget">Monthly budget</label><input type="number" id="budget" min="10" max="800" step="5">
+        </div></div>
+      </div>
+    </section>
   </div>
 
   <div>
-    <div class="panel">
-      <h2>Medications</h2>
-      <p class="hint">One per line. Brand or generic; dosages are ignored.</p>
-      <textarea id="meds" placeholder="Eliquis 5mg&#10;metformin 500mg&#10;Lantus&#10;lisinopril"></textarea>
-      <div class="chips" id="med-feedback"></div>
-    </div>
-
-    <div class="panel">
-      <h2>Health conditions</h2>
-      <p class="hint">Type what the client says &mdash; &ldquo;sugar&rdquo;, &ldquo;mini stroke&rdquo;, &ldquo;water pill&rdquo;.</p>
-      <div class="typeahead">
-        <label class="sr" for="cond-search">Search conditions</label>
-        <input type="text" id="cond-search" placeholder="Search conditions&hellip;" autocomplete="off">
-        <div class="suggest" id="cond-suggest" style="display:none"></div>
+    <section class="card">
+      <div class="hd"><h2>Medications</h2></div>
+      <div class="bd">
+        <p class="hint">One per line. Brand or generic; dosages are ignored.</p>
+        <label class="sr" for="meds">Medication list</label>
+        <textarea id="meds" placeholder="Eliquis 5mg&#10;metformin 500mg&#10;Lantus&#10;lisinopril"></textarea>
+        <div class="chips" id="med-feedback"></div>
       </div>
-      <div class="chips" id="cond-chips"></div>
-    </div>
+    </section>
 
-    <div class="panel" id="followups-wrap" style="display:none">
-      <h2>Details</h2>
-      <p class="hint">These are the answers carrier rules key off. Anything left unknown shows the
-        carrier's worst case, with the question listed below.</p>
-      <div id="followups"></div>
-    </div>
+    <section class="card">
+      <div class="hd"><h2>Health conditions</h2></div>
+      <div class="bd">
+        <p class="hint">Type what the client says &mdash; &ldquo;sugar&rdquo;, &ldquo;mini stroke&rdquo;, &ldquo;water pill&rdquo;.</p>
+        <div class="typeahead">
+          <label class="sr" for="cond-search">Search conditions</label>
+          <input type="text" id="cond-search" placeholder="Search conditions" autocomplete="off">
+          <div class="suggest" id="cond-suggest" style="display:none"></div>
+        </div>
+        <div class="chips" id="cond-chips"></div>
+      </div>
+    </section>
 
+    <section class="card" id="followups-wrap" style="display:none">
+      <div class="hd"><h2>Details</h2></div>
+      <div class="bd">
+        <p class="hint">These are the answers carrier rules key off. Anything left unknown shows the
+          carrier's worst case, with the question added to the list below.</p>
+        <div id="followups"></div>
+      </div>
+    </section>
+
+    <div class="section-head"><h2>Result</h2></div>
     <div id="metrics" class="metrics"></div>
     <div id="warnings"></div>
     <div id="ask"></div>
 
     <div class="toolbar">
-      <button class="btn primary" id="copy-csv" type="button">Copy comparison as CSV</button>
+      <button class="btn primary" id="copy-csv" type="button">Copy as CSV</button>
       <button class="btn" id="toggle-declines" type="button">Show declines</button>
       <button class="btn" id="reset" type="button">Clear health info</button>
     </div>
@@ -112,7 +124,7 @@
 <script src="engine.js"></script>
 <script src="app.js"></script>
 <script>
-fetch("bundle.json").then(r => r.json()).then(window.FEX_BOOT);
+fetch("bundle.json").then(function (r) { return r.json(); }).then(window.FEX_BOOT);
 </script>
 </body>
 </html>

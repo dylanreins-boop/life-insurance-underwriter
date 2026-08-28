@@ -29,6 +29,11 @@ class ConditionEntry:
     raw: Optional[str] = None
     #: Set when this condition was inferred from a medication rather than typed.
     inferred_from: Optional[str] = None
+    #: True when ``raw`` is the client's own words (or a drug name) rather than
+    #: the catalog's label. Only then is it worth echoing back in a reason -
+    #: prefixing the catalog label onto a rule that already names the condition
+    #: just produces "Heart attack: Heart attack within 24 months".
+    verbatim: bool = True
 
     def get(self, key: str, default: Any = None) -> Any:
         return self.attrs.get(key, default)

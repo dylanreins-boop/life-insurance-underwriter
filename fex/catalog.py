@@ -193,9 +193,15 @@ class Catalog:
             # When the caller passed an id (a picker selection rather than typed
             # text), show the catalog's label so generated questions read as
             # English rather than as an identifier.
-            raw = self.label(cond_id) if str(name) == cond_id else str(name)
+            from_picker = str(name) == cond_id
+            raw = self.label(cond_id) if from_picker else str(name)
             parsed.append(
-                ConditionEntry(id=cond_id, attrs=dict(attrs or {}), raw=raw)
+                ConditionEntry(
+                    id=cond_id,
+                    attrs=dict(attrs or {}),
+                    raw=raw,
+                    verbatim=not from_picker,
+                )
             )
         return merge_conditions(parsed), unmatched
 
@@ -254,12 +260,14 @@ def merge_conditions(entries: List[ConditionEntry]) -> List[ConditionEntry]:
                 attrs=dict(entry.attrs),
                 raw=entry.raw,
                 inferred_from=entry.inferred_from,
+                verbatim=entry.verbatim,
             )
             continue
         for key, value in entry.attrs.items():
             existing.attrs.setdefault(key, value)
         if existing.raw is None:
             existing.raw = entry.raw
+            existing.verbatim = entry.verbatim
         # A directly reported condition outranks an inferred one.
         if entry.inferred_from is None:
             existing.inferred_from = None

@@ -183,7 +183,10 @@ class Rule:
     def _describe(self, entry: Optional[ConditionEntry]) -> str:
         if self.reason:
             return self.reason
-        if entry is not None and entry.raw:
+        # Echo the client's own words, or the drug the condition came from,
+        # because that is information the rule label does not carry. A catalog
+        # label would only restate the rule.
+        if entry is not None and entry.raw and entry.verbatim:
             return f"{entry.raw}: {self.label}"
         return self.label
 
@@ -240,7 +243,7 @@ class Rule:
     def _default_question(
         self, unknown: Sequence[str], entry: Optional[ConditionEntry]
     ) -> str:
-        subject = entry.raw or entry.id.replace("_", " ") if entry else "the applicant"
+        subject = (entry.raw or entry.id.replace("_", " ")) if entry else "the applicant"
         pretty = ", ".join(k.replace("_", " ") for k in unknown) or "further detail"
         return f"Need {pretty} for {subject} to settle '{self.label}'."
 

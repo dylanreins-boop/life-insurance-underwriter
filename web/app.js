@@ -86,7 +86,7 @@
     const parsed = engine.catalog.parseMedications(medList());
     for (const med of parsed.medications) {
       if (!med.matched) {
-        box.appendChild(el("span", { class: "chip med" }, [
+        box.appendChild(el("span", { class: "chip unknown" }, [
           el("span", { text: med.raw }),
           el("span", { class: "imp", text: "not recognised" }),
         ]));
@@ -96,7 +96,7 @@
       const implies = (drug.implies || []).map((c) => engine.catalog.label(c)).join(", ");
       const tail =
         drug.confidence === "low" ? "ask why" : implies || (drug.flags || []).join(", ") || "no rating";
-      box.appendChild(el("span", { class: "chip med" }, [
+      box.appendChild(el("span", { class: "chip" }, [
         el("span", { text: med.brand || med.ingredient }),
         el("span", { class: "imp", text: "→ " + tail }),
       ]));
@@ -143,6 +143,9 @@
           for (const [label, value] of [["Unknown", undefined], ["Yes", true], ["No", false]]) {
             seg.appendChild(el("button", {
               type: "button",
+              // "Unknown" is the starting state, not an answer, so it is styled
+              // quietly - only a real Yes/No takes the accent.
+              class: value === undefined ? "neutral" : null,
               "aria-pressed": String(answered === value),
               text: label,
               onclick: () => setAnswer(entry.id, f.key, value),
@@ -186,7 +189,10 @@
     const summary = el("summary", {}, [
       el("div", {}, [
         el("div", { class: "name", text: r.carrier_name }),
-        el("div", { class: "prod", text: r.product_name + (r.am_best ? "  ·  AM Best " + r.am_best : "") }),
+        el("div", { class: "prod" }, [
+          document.createTextNode(r.product_name),
+          r.am_best ? el("span", { class: "rating", text: "  \u00b7  AM Best " + r.am_best }) : null,
+        ]),
       ]),
       el("span", { class: "badge " + r.tier, text: FEX.TIERS[r.tier].label }),
       r.quote
@@ -208,7 +214,7 @@
     body.appendChild(list);
     for (const note of r.notes) body.appendChild(el("p", { class: "cite", text: note }));
 
-    return el("details", { class: "result" + (r.eligible ? "" : " declined") }, [summary, body]);
+    return el("details", { class: "result t-" + r.tier + (r.eligible ? "" : " declined") }, [summary, body]);
   }
 
   function render(report) {
@@ -239,10 +245,15 @@
     if (report.open_questions.length) {
       const ul = el("ul");
       report.open_questions.forEach((q) => ul.appendChild(el("li", { text: q })));
-      ask.appendChild(el("div", { class: "panel ask" }, [
-        el("h2", { text: "Ask the client (" + report.open_questions.length + ")" }),
-        el("p", { class: "hint", text: "Each of these changes at least one carrier's answer." }),
-        ul,
+      ask.appendChild(el("section", { class: "card ask" }, [
+        el("div", { class: "hd" }, [
+          el("h2", { text: "Ask the client" }),
+          el("span", { class: "n lbl", text: report.open_questions.length + " open" }),
+        ]),
+        el("div", { class: "bd" }, [
+          el("p", { class: "hint", text: "Each of these changes at least one carrier's answer." }),
+          ul,
+        ]),
       ]));
     }
 
@@ -256,7 +267,10 @@
     const decBox = $("#declines");
     decBox.innerHTML = "";
     if (declines.length) {
-      decBox.appendChild(el("h2", { text: "Declines (" + declines.length + ")" }));
+      decBox.appendChild(el("div", { class: "section-head" }, [
+        el("h2", { text: "Declines" }),
+        el("span", { class: "n", text: declines.length + " carriers" }),
+      ]));
       if (state.showDeclines) declines.forEach((r) => decBox.appendChild(renderResult(r)));
     }
     $("#toggle-declines").textContent =

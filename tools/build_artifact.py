@@ -32,8 +32,11 @@ def main() -> int:
     body = re.sub(r'<script src="[^"]+"></script>\s*', "", body)
     body = re.sub(r"<script>\s*fetch\(.*?</script>\s*", "", body, flags=re.S)
 
+    fonts = re.search(r'<link rel="stylesheet" href="https://fonts\.googleapis[^>]+>', html).group(0)
+
     parts = [
         "<title>Final Expense Underwriter</title>",
+        fonts,
         "<style>\n" + read("styles.css") + "\n</style>",
         body.strip(),
         "<script>\n" + read("engine.js") + "\n</script>",
