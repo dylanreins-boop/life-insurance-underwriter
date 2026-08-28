@@ -14,19 +14,36 @@ outcome.
 
 ## Quick start
 
+Three ways to run it, all off the same YAML rulebase.
+
+**Streamlit** — the version to deploy and share.
+
 ```bash
 pip install -r requirements.txt
-
-# Web UI
 streamlit run streamlit_app.py
+```
 
-# Or the command line
+To put it on Streamlit Community Cloud: push this repo, create an app pointing
+at it, and set the main file to `streamlit_app.py`. `requirements.txt` is
+already what the cloud builder needs.
+
+**Local browser app** — no Streamlit, standard library only. The page runs a
+JavaScript port of the engine, so it also works as a single offline file.
+
+```bash
+python -m fex.cli serve          # http://127.0.0.1:8000
+python tools/build_artifact.py   # -> dist/underwriter.html, self-contained
+```
+
+**Command line**
+
+```bash
 python -m fex.cli quote --age 68 --female --height 5-4 --weight 190 --face 12000 \
     --med "eliquis 5mg" --med metformin --med lantus \
     --condition "diabetes:insulin=yes,age_at_diagnosis=52"
 ```
 
-The engine itself needs only PyYAML. Streamlit is only for the web UI.
+The engine itself needs only PyYAML. Streamlit is only for the Streamlit UI.
 
 ---
 
@@ -162,7 +179,9 @@ fex/
     rulepacks.yaml      Shared underwriting screens
     carriers/           30 carrier files
     rates/              Drop real rate tables here
-streamlit_app.py
+streamlit_app.py       Streamlit UI
+web/                   Browser UI + JavaScript port of the engine
+tools/                 Bundle exporter, artifact builder, parity runner
 tests/
 ```
 
@@ -189,5 +208,8 @@ actually exists, so a typo fails the build rather than silently never firing.
 python -m unittest discover -s tests -v
 ```
 
-56 tests covering the rule evaluator, build charts, the medication matcher,
-data integrity across all 30 carrier files, and end-to-end scenarios.
+65 tests covering the rule evaluator, build charts, the medication matcher,
+data integrity across all 30 carrier files, end-to-end scenarios, and a parity
+suite that runs twenty cases through both the Python and JavaScript engines and
+compares tiers, products, premiums, reasons and questions. `web/engine.js` is a
+port, not a reimplementation, so any drift between the two is a bug.

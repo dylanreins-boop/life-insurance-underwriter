@@ -37,6 +37,19 @@ def get_engine() -> Engine:
     return Engine.load()
 
 
+def md(text: str) -> str:
+    """Escape dollar signs for Streamlit markdown.
+
+    Streamlit reads ``$...$`` as LaTeX, so an unescaped premium silently eats
+    the markdown around it and renders as raw asterisks.
+    """
+    return text.replace("$", r"\$")
+
+
+def usd(amount: float, cents: bool = True) -> str:
+    return md(f"${amount:,.2f}" if cents else f"${amount:,.0f}")
+
+
 def badge(tier: Tier) -> str:
     fg, bg, label = TIER_STYLE[tier]
     return (
@@ -228,7 +241,7 @@ if bad_meds:
 if report.open_questions:
     with st.expander(f"Ask the client ({len(report.open_questions)})", expanded=True):
         for q in report.open_questions:
-            st.markdown(f"- {q}")
+            st.markdown(md(f"- {q}"))
 
 st.subheader(f"Offers ({len(offers)})")
 if not offers:
@@ -244,10 +257,11 @@ for result in offers:
     )
     cols[1].markdown(badge(result.tier), unsafe_allow_html=True)
     if result.quote:
-        star = "" if not result.quote.illustrative else "*"
+        star = "*" if result.quote.illustrative else ""
         cols[2].markdown(
-            f"**${result.quote.monthly:,.2f}**{star}/mo  \n"
-            f"<span style='color:#666;font-size:0.8rem'>${result.quote.face_amount:,.0f} face</span>",
+            f"**{usd(result.quote.monthly)}**{star}/mo  \n"
+            f"<span style='color:#666;font-size:0.8rem'>"
+            f"{usd(result.quote.face_amount, cents=False)} face</span>",
             unsafe_allow_html=True,
         )
     if not result.certain:
@@ -256,26 +270,26 @@ for result in offers:
             unsafe_allow_html=True,
         )
     elif result.blocking_reasons:
-        cols[3].caption(result.blocking_reasons[0])
+        cols[3].caption(md(result.blocking_reasons[0]))
 
     with st.expander("Why", expanded=False):
-        st.caption(result.benefit_schedule)
+        st.caption(md(result.benefit_schedule or ""))
         if result.am_best:
             st.caption(f"AM Best: {result.am_best}")
         if result.findings:
             for f in result.findings:
                 mark = "❓" if f.pending else "•"
-                st.markdown(f"{mark} **{f.outcome.label}** — {f.reason}")
+                st.markdown(md(f"{mark} **{f.outcome.label}** — {f.reason}"))
         else:
             st.markdown("• Nothing on the application downgrades this case.")
         for note in result.notes:
-            st.caption(note)
+            st.caption(md(note))
 
 if declines:
     with st.expander(f"Declines ({len(declines)})"):
         for result in declines:
             reasons = "; ".join(result.blocking_reasons[:3]) or "No product available"
-            st.markdown(f"**{result.carrier_name}** — {reasons}")
+            st.markdown(md(f"**{result.carrier_name}** — {reasons}"))
 
 # ---------------------------------------------------------------- export
 buf = io.StringIO()
