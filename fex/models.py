@@ -120,6 +120,11 @@ class Finding:
     best_case: Optional[Tier] = None
     question: Optional[str] = None
     citation: Optional[str] = None
+    #: Attribute names the rule needed but did not have.
+    unknown_keys: List[str] = field(default_factory=list)
+    #: True when `question` is the engine's fallback wording rather than one the
+    #: rule author supplied, so the engine may replace it with the catalog's.
+    default_question: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -132,6 +137,7 @@ class Finding:
             "best_case": self.best_case.key if self.best_case else None,
             "question": self.question,
             "citation": self.citation,
+            "unknown_keys": self.unknown_keys,
         }
 
 

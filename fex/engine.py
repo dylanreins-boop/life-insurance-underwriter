@@ -130,6 +130,7 @@ class Engine:
         if carrier.build:
             findings.extend(carrier.build.evaluate(applicant))
 
+        self._improve_questions(findings)
         settled = [f for f in findings if not f.pending]
         pending = [f for f in findings if f.pending]
 
@@ -189,6 +190,25 @@ class Engine:
             face_max=chosen.face_max,
             am_best=carrier.am_best,
         )
+
+    def _improve_questions(self, findings: List[Finding]) -> None:
+        """Replace fallback question wording with the catalog's own follow-up.
+
+        Two carriers with different lookback windows both need the same fact,
+        so without this the agent gets "months since event for TIA to settle
+        'TIA within 12 months'" and again for 6 months. Asking in the catalog's
+        words collapses them to one question the agent can actually read out.
+        """
+        for finding in findings:
+            if not (finding.pending and finding.default_question and finding.condition_id):
+                continue
+            asks = [
+                self.catalog.followup_question(finding.condition_id, key)
+                for key in finding.unknown_keys
+            ]
+            asks = [a for a in asks if a]
+            if len(asks) == len(finding.unknown_keys) and asks:
+                finding.question = " ".join(dict.fromkeys(asks))
 
     def _select_product(
         self, carrier: Carrier, tier: Tier, applicant: Applicant

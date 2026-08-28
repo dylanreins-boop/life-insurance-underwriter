@@ -218,6 +218,8 @@ class Rule:
             )
             if finding.pending:
                 finding.best_case = Tier.PREFERRED
+                finding.unknown_keys = list(unknown)
+                finding.default_question = self.question is None
                 finding.question = self.question or self._default_question(unknown, entry)
                 finding.reason = f"{finding.reason} (unconfirmed)"
             findings.append(finding)

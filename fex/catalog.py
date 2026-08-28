@@ -190,8 +190,12 @@ class Catalog:
             if not cond_id:
                 unmatched.append(str(name))
                 continue
+            # When the caller passed an id (a picker selection rather than typed
+            # text), show the catalog's label so generated questions read as
+            # English rather than as an identifier.
+            raw = self.label(cond_id) if str(name) == cond_id else str(name)
             parsed.append(
-                ConditionEntry(id=cond_id, attrs=dict(attrs or {}), raw=str(name))
+                ConditionEntry(id=cond_id, attrs=dict(attrs or {}), raw=raw)
             )
         return merge_conditions(parsed), unmatched
 

@@ -376,6 +376,27 @@ class EndToEndTests(unittest.TestCase):
         import json
         json.loads(json.dumps(data))  # must be JSON-clean
 
+    def test_questions_use_the_catalog_wording(self):
+        # Two carriers use 12- and 6-month TIA lookbacks; both need the same
+        # fact, so the agent should get one readable question, not two.
+        report = self.run_case(age=68, conditions=["tia"])
+        self.assertEqual(report.open_questions, ["How many months since the TIA?"])
+
+    def test_picker_ids_display_as_labels(self):
+        report = self.run_case(age=68, conditions=["diabetes_type2"])
+        entry = report.applicant.find("diabetes_type2")
+        self.assertEqual(entry.raw, "Type 2 diabetes")
+
+    def test_typed_text_is_preserved_verbatim(self):
+        report = self.run_case(age=68, conditions=["sugar"])
+        self.assertEqual(report.applicant.find("diabetes_type2").raw, "sugar")
+
+    def test_rule_supplied_questions_are_not_overwritten(self):
+        report = self.run_case(age=68, conditions=["aneurysm"])
+        self.assertIn(
+            "Has the aneurysm been surgically repaired?", report.open_questions
+        )
+
     def test_every_carrier_returns_a_verdict(self):
         report = self.run_case(age=70)
         self.assertEqual(len(report.results), len(self.engine.carriers))
