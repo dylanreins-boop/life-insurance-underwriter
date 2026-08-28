@@ -226,11 +226,38 @@ class DataIntegrityTests(unittest.TestCase):
                 self.assertLess(p.face_min, p.face_max, f"{carrier.id}/{p.id}")
                 self.assertLess(p.issue_age_min, p.issue_age_max, f"{carrier.id}/{p.id}")
 
-    def test_unverified_carriers_are_flagged(self):
-        # Nothing in the repo is transcribed from a real guide yet, so every
-        # carrier must still be carrying the unverified flag.
+    def test_seeded_defaults_are_never_marked_verified(self):
+        # A file still carrying the seed language has not been checked against
+        # a real document, whatever its flag says.
         for carrier in self.carriers:
-            self.assertFalse(carrier.verified, f"{carrier.id} claims to be verified")
+            if "Seeded from general market knowledge" in carrier.source_note:
+                self.assertFalse(
+                    carrier.verified,
+                    f"{carrier.id} claims verified but still carries the seeded "
+                    f"source_note - replace it with the guide you transcribed from",
+                )
+
+    def test_verified_carriers_carry_provenance(self):
+        # verified:true is a claim that a person read a document. This makes the
+        # claim say which document, so it cannot be set on a hunch. It passes
+        # vacuously today and starts biting the moment a carrier is transcribed.
+        for carrier in self.carriers:
+            if not carrier.verified:
+                continue
+            self.assertTrue(
+                carrier.as_of.strip(),
+                f"{carrier.id} is verified but has no as_of edition or date",
+            )
+            self.assertTrue(
+                carrier.source_note.strip(),
+                f"{carrier.id} is verified but does not cite a source document",
+            )
+            self.assertNotEqual(
+                carrier.build.source, "bmi-approximation",
+                f"{carrier.id} is verified but its build is still the BMI "
+                f"approximation - transcribe the printed chart, or set an "
+                f"explicit build source saying the guide publishes BMI limits",
+            )
 
     def test_rule_pack_override_order(self):
         # Americo pulls in the liberal pack after the standard one, so its

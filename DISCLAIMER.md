@@ -45,5 +45,7 @@ The engine is entirely data-driven, so the path from "useful default" to
 5. Drop the real rate table into `fex/data/rates/<carrier>.yaml`
    (`fex rates template <carrier_id>` prints the shape).
 
-Once `verified: true` is set, remove that carrier from the exemption in
-`tests/test_engine.py::DataIntegrityTests::test_unverified_carriers_are_flagged`.
+The test suite keeps this honest without needing to be edited: a carrier
+carrying `verified: true` must also carry an `as_of`, a `source_note` naming the
+document, and a build chart that is no longer the BMI approximation - and a file
+still carrying the seeded `source_note` may not claim to be verified at all.
