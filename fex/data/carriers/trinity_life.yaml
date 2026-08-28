@@ -1,0 +1,33 @@
+id: trinity_life
+name: Trinity Life Insurance
+am_best: "B++"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's final expense
+  portfolio. Verify against the current field underwriting guide.
+rate_index: 1.00
+underwriting_style: Family Choice application with level, graded and modified plans.
+build:
+  bmi: {min: 17, level_max: 41, graded_max: 47}
+products:
+  - id: family_choice_level
+    name: Family Choice - Level
+    tier: level
+    issue_ages: {min: 50, max: 85}
+    face: {min: 2500, max: 30000}
+    benefit_schedule: Full death benefit from day one.
+  - id: family_choice_graded
+    name: Family Choice - Graded
+    tier: graded
+    issue_ages: {min: 50, max: 80}
+    face: {min: 2500, max: 20000}
+    benefit_schedule: Years 1-2 pay a reduced benefit; full benefit from year 3.
+  - id: family_choice_modified
+    name: Family Choice - Modified
+    tier: modified
+    issue_ages: {min: 50, max: 80}
+    face: {min: 2500, max: 15000}
+    benefit_schedule: Return of premium plus interest in years 1-2; full benefit from year 3.
+underwriting:
+  extends: [core_knockouts, level_screen_standard, graded_screen_standard]

@@ -1,0 +1,20 @@
+id: guaranteed_trust_gi
+name: AMAM Guaranteed Issue (American-Amicable Group)
+am_best: "A"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's guaranteed issue
+  offering. Verify against the current guide.
+rate_index: 1.12
+underwriting_style: Guaranteed issue - no health questions.
+products:
+  - id: gi_wl
+    name: Guaranteed Issue Whole Life
+    tier: gi
+    bypass_underwriting: true
+    issue_ages: {min: 50, max: 80}
+    face: {min: 2500, max: 15000}
+    benefit_schedule: Return of premium plus 10% for the first 2 years; full benefit after.
+underwriting:
+  extends: [gi_no_questions]

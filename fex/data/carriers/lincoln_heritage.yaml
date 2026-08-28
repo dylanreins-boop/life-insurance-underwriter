@@ -1,0 +1,37 @@
+id: lincoln_heritage
+name: Lincoln Heritage
+am_best: "NR"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's final expense
+  portfolio. Verify against the current field underwriting guide.
+rate_index: 1.20
+underwriting_style: Liberal health questions paired with the Funeral Consumer Guardian Society membership.
+notes:
+  - Prices high relative to the market, but takes impaired risks other carriers turn away.
+  - Sold captive; availability depends on your contract.
+build:
+  bmi: {min: 16, level_max: 44, graded_max: 50}
+products:
+  - id: funeral_advantage_level
+    name: Funeral Advantage - Level
+    tier: level
+    issue_ages: {min: 40, max: 85}
+    face: {min: 1000, max: 20000}
+    benefit_schedule: Full death benefit from day one.
+  - id: funeral_advantage_graded
+    name: Funeral Advantage - Graded
+    tier: graded
+    issue_ages: {min: 40, max: 85}
+    face: {min: 1000, max: 15000}
+    benefit_schedule: Reduced benefit in years 1-2; full benefit from year 3.
+  - id: funeral_advantage_modified
+    name: Funeral Advantage - Modified
+    tier: modified
+    issue_ages: {min: 40, max: 85}
+    face: {min: 1000, max: 10000}
+    benefit_schedule: Return of premium plus interest in years 1-2; full benefit from year 3.
+underwriting:
+  extends: [core_knockouts, level_screen_standard, level_screen_liberal, graded_screen_standard]
+  disable: [ko_cirrhosis, ko_paralysis]

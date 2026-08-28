@@ -1,0 +1,29 @@
+id: transamerica
+name: Transamerica
+am_best: "A"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's final expense
+  portfolio. Verify against the current field underwriting guide.
+rate_index: 1.03
+underwriting_style: Immediate / Easy Solution structure; 10-Pay is available for clients who want it paid up.
+notes:
+  - One of the few final expense carriers offering a 10-pay option.
+build:
+  bmi: {min: 17, level_max: 40, graded_max: 45}
+products:
+  - id: immediate_solution
+    name: Immediate Solution
+    tier: level
+    issue_ages: {min: 45, max: 85}
+    face: {min: 1000, max: 50000}
+    benefit_schedule: Full death benefit from day one.
+  - id: easy_solution
+    name: Easy Solution (Graded)
+    tier: graded
+    issue_ages: {min: 45, max: 80}
+    face: {min: 1000, max: 25000}
+    benefit_schedule: Years 1-2 pay a reduced benefit; full benefit from year 3.
+underwriting:
+  extends: [core_knockouts, level_screen_standard, graded_screen_standard]

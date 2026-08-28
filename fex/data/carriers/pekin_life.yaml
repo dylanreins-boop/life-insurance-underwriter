@@ -1,0 +1,30 @@
+id: pekin_life
+name: Pekin Life
+am_best: "A-"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's final expense
+  portfolio. Verify against the current field underwriting guide.
+rate_index: 0.97
+underwriting_style: Simplified issue whole life; limited state footprint.
+states_excluded: [AK, HI, NY, CA, FL, TX, NJ, MA, CT, RI, VT, ME, NH, DE, MD, SC, GA, AL, MS, LA, AR, OK, NM, AZ, NV, UT, ID, MT, WY, ND, SD, OR, WA]
+notes:
+  - Regional carrier - confirm appointment and state availability before quoting.
+build:
+  bmi: {min: 17, level_max: 40, graded_max: 45}
+products:
+  - id: final_expense_level
+    name: Final Expense Whole Life
+    tier: level
+    issue_ages: {min: 50, max: 85}
+    face: {min: 2500, max: 35000}
+    benefit_schedule: Full death benefit from day one.
+  - id: final_expense_graded
+    name: Final Expense Whole Life - Graded
+    tier: graded
+    issue_ages: {min: 50, max: 80}
+    face: {min: 2500, max: 20000}
+    benefit_schedule: Years 1-2 pay a reduced benefit; full benefit from year 3.
+underwriting:
+  extends: [core_knockouts, level_screen_standard, graded_screen_standard]

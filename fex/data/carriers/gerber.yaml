@@ -1,0 +1,23 @@
+id: gerber
+name: Gerber Life
+am_best: "A"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's guaranteed issue
+  product. Verify against the current guide.
+rate_index: 1.15
+underwriting_style: Guaranteed issue only - no health questions and no prescription check.
+notes:
+  - Heavily advertised direct to consumers, so clients often ask for it by name.
+  - Because it is guaranteed issue, the premium is high relative to an underwritten plan.
+products:
+  - id: guaranteed_life
+    name: Guaranteed Life Insurance
+    tier: gi
+    bypass_underwriting: true
+    issue_ages: {min: 50, max: 80}
+    face: {min: 5000, max: 25000}
+    benefit_schedule: Return of premium plus 10% if death occurs in the first 2 years; full benefit after.
+underwriting:
+  extends: [gi_no_questions]

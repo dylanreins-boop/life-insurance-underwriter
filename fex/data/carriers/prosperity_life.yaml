@@ -1,0 +1,33 @@
+id: prosperity_life
+name: Prosperity Life (Shenandoah Life)
+am_best: "A-"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's final expense
+  portfolio. Verify against the current field underwriting guide.
+rate_index: 0.99
+underwriting_style: New Vista final expense platform.
+build:
+  bmi: {min: 17, level_max: 42, graded_max: 48}
+products:
+  - id: new_vista_level
+    name: New Vista - Level
+    tier: level
+    issue_ages: {min: 50, max: 85}
+    face: {min: 2000, max: 30000}
+    benefit_schedule: Full death benefit from day one.
+  - id: new_vista_graded
+    name: New Vista - Graded
+    tier: graded
+    issue_ages: {min: 50, max: 85}
+    face: {min: 2000, max: 20000}
+    benefit_schedule: Years 1-2 pay a reduced benefit; full benefit from year 3.
+  - id: new_vista_modified
+    name: New Vista - Modified
+    tier: modified
+    issue_ages: {min: 50, max: 80}
+    face: {min: 2000, max: 15000}
+    benefit_schedule: Return of premium plus interest in years 1-2; full benefit from year 3.
+underwriting:
+  extends: [core_knockouts, level_screen_standard, graded_screen_standard]

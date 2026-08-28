@@ -1,0 +1,27 @@
+id: vantis_life
+name: Vantis Life (Penn Mutual)
+am_best: "A+"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's final expense
+  portfolio. Verify against the current field underwriting guide.
+rate_index: 1.00
+underwriting_style: Simplified issue whole life backed by a highly rated parent.
+build:
+  bmi: {min: 17, level_max: 40, graded_max: 46}
+products:
+  - id: vantis_level
+    name: Simplified Issue Whole Life
+    tier: level
+    issue_ages: {min: 50, max: 85}
+    face: {min: 2500, max: 35000}
+    benefit_schedule: Full death benefit from day one.
+  - id: vantis_graded
+    name: Simplified Issue Whole Life - Graded
+    tier: graded
+    issue_ages: {min: 50, max: 80}
+    face: {min: 2500, max: 20000}
+    benefit_schedule: Years 1-2 pay a reduced benefit; full benefit from year 3.
+underwriting:
+  extends: [core_knockouts, level_screen_standard, graded_screen_standard]

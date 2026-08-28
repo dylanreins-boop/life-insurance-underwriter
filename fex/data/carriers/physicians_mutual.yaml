@@ -1,0 +1,30 @@
+id: physicians_mutual
+name: Physicians Mutual
+am_best: "A"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's final expense
+  portfolio. Verify against the current field underwriting guide.
+rate_index: 1.08
+underwriting_style: Direct-to-consumer heritage; simplified issue and guaranteed issue plans.
+notes:
+  - Direct mail brand recognition; clients frequently ask for it by name.
+build:
+  bmi: {min: 17, level_max: 40, graded_max: 45}
+products:
+  - id: simplified_wl
+    name: Simplified Whole Life
+    tier: level
+    issue_ages: {min: 45, max: 85}
+    face: {min: 2000, max: 25000}
+    benefit_schedule: Full death benefit from day one.
+  - id: guaranteed_acceptance
+    name: Guaranteed Acceptance Whole Life
+    tier: gi
+    bypass_underwriting: true
+    issue_ages: {min: 50, max: 85}
+    face: {min: 2000, max: 20000}
+    benefit_schedule: Return of premium plus interest for 2 years; full benefit after.
+underwriting:
+  extends: [core_knockouts, level_screen_standard, graded_screen_standard, chronic_screen_tight]

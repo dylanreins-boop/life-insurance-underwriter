@@ -1,0 +1,29 @@
+id: royal_neighbors
+name: Royal Neighbors of America
+am_best: "A-"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's final expense
+  portfolio. Verify against the current field underwriting guide.
+rate_index: 0.99
+underwriting_style: Fraternal; simplified issue with a generous build chart.
+notes:
+  - Historically one of the more forgiving build charts in the market, which matters for higher-BMI clients.
+build:
+  bmi: {min: 16.5, level_max: 44, graded_max: 50}
+products:
+  - id: simplified_issue_wl
+    name: Simplified Issue Whole Life
+    tier: level
+    issue_ages: {min: 50, max: 85}
+    face: {min: 5000, max: 30000}
+    benefit_schedule: Full death benefit from day one.
+  - id: ensured_legacy_graded
+    name: Ensured Legacy - Graded
+    tier: graded
+    issue_ages: {min: 50, max: 85}
+    face: {min: 5000, max: 20000}
+    benefit_schedule: Years 1-2 pay a reduced benefit; full benefit from year 3.
+underwriting:
+  extends: [core_knockouts, level_screen_standard, level_screen_liberal, graded_screen_standard]

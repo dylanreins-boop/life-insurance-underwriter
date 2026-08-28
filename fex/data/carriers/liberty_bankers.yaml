@@ -1,0 +1,33 @@
+id: liberty_bankers
+name: Liberty Bankers Life
+am_best: "A-"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's final expense
+  portfolio. Verify against the current field underwriting guide.
+rate_index: 0.95
+underwriting_style: SIMPL application; competitive on price at older ages.
+build:
+  bmi: {min: 17, level_max: 41, graded_max: 47}
+products:
+  - id: simpl_level
+    name: SIMPL Whole Life - Level
+    tier: level
+    issue_ages: {min: 45, max: 85}
+    face: {min: 3000, max: 40000}
+    benefit_schedule: Full death benefit from day one.
+  - id: simpl_graded
+    name: SIMPL Whole Life - Graded
+    tier: graded
+    issue_ages: {min: 45, max: 80}
+    face: {min: 3000, max: 25000}
+    benefit_schedule: Years 1-2 pay a reduced benefit; full benefit from year 3.
+  - id: simpl_modified
+    name: SIMPL Whole Life - Modified
+    tier: modified
+    issue_ages: {min: 45, max: 80}
+    face: {min: 3000, max: 15000}
+    benefit_schedule: Return of premium plus interest in years 1-2; full benefit from year 3.
+underwriting:
+  extends: [core_knockouts, level_screen_standard, graded_screen_standard]

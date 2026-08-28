@@ -1,0 +1,670 @@
+# Shared rule packs.
+#
+# Carrier files pull these in with `extends:` and then override individual
+# rules by re-declaring the same rule id. That keeps each carrier file down to
+# the handful of places it genuinely differs from the market, which is also
+# where an agent's attention belongs.
+#
+# Lookback windows are expressed in months so a carrier can override just the
+# number without restating the rule.
+
+# ==========================================================================
+# Knockouts that essentially every fully-underwritten final expense product
+# shares. These are the "Part 1" questions on the application: a yes answer
+# ends the application.
+# ==========================================================================
+core_knockouts:
+  - id: ko_dementia
+    label: Alzheimer's disease, dementia or cognitive impairment
+    conditions: [dementia]
+    outcome: decline
+    citation: Part 1 knockout question
+
+  - id: ko_als
+    label: ALS (Lou Gehrig's disease)
+    conditions: [als]
+    outcome: decline
+
+  - id: ko_huntingtons
+    label: Huntington's disease
+    conditions: [huntingtons]
+    outcome: decline
+
+  - id: ko_hiv
+    label: HIV or AIDS
+    conditions: [hiv]
+    outcome: decline
+
+  - id: ko_terminal
+    label: Terminal illness or life expectancy under 12 months
+    conditions: [terminal_illness]
+    outcome: decline
+
+  - id: ko_hospice
+    label: Hospice or palliative care
+    conditions: [hospice]
+    outcome: decline
+
+  - id: ko_nursing_home
+    label: Nursing home or skilled nursing confinement
+    conditions: [nursing_home]
+    outcome: decline
+
+  - id: ko_adl
+    label: Needs assistance with activities of daily living
+    conditions: [adl_assistance]
+    outcome: decline
+
+  - id: ko_bedridden
+    label: Wheelchair or bed confinement due to chronic illness
+    conditions: [wheelchair]
+    when: {cause_disease: true}
+    outcome: decline
+    question: Is the wheelchair or walker needed because of a chronic illness, or because of an injury?
+
+  - id: ko_dialysis
+    label: Kidney dialysis
+    conditions: [dialysis]
+    outcome: decline
+
+  - id: ko_ckd_advanced
+    label: Chronic kidney disease stage 4 or 5
+    conditions: [ckd]
+    when: {stage: {gte: 4}}
+    outcome: decline
+    question: What stage is the kidney disease, and is the applicant on dialysis?
+
+  - id: ko_ckd_on_dialysis
+    label: Kidney disease requiring dialysis
+    conditions: [ckd]
+    when: {dialysis: true}
+    outcome: decline
+
+  - id: ko_transplant_pending
+    label: Awaiting an organ transplant
+    conditions: [organ_transplant]
+    when: {pending: true}
+    outcome: decline
+    question: Has the transplant already happened, or is the applicant on the waiting list?
+
+  - id: ko_cancer_active
+    label: Currently in treatment for cancer
+    conditions: [cancer_internal, leukemia_lymphoma, melanoma]
+    when: {currently_treated: true}
+    outcome: decline
+    question: Is the applicant currently receiving cancer treatment?
+
+  - id: ko_oxygen
+    label: Oxygen use for a lung or heart condition
+    conditions: [oxygen_use]
+    when: {for_sleep_apnea_only: false}
+    outcome: decline
+    question: Is the oxygen used only for sleep apnea, or for a lung/heart condition?
+
+  - id: ko_mental_incapacity
+    label: Mental incapacity or legal guardianship
+    conditions: [mental_incapacity]
+    outcome: decline
+
+  - id: ko_cirrhosis
+    label: Cirrhosis or liver failure
+    conditions: [cirrhosis]
+    outcome: decline
+
+  - id: ko_cystic_fibrosis
+    label: Cystic fibrosis
+    conditions: [cystic_fibrosis]
+    outcome: decline
+
+  - id: ko_paralysis
+    label: Paralysis of two or more limbs
+    conditions: [paralysis]
+    outcome: decline
+
+  - id: ko_aplastic_anemia
+    label: Aplastic anemia or bone marrow disorder
+    conditions: [aplastic_anemia]
+    outcome: decline
+
+  - id: ko_pending_tests
+    label: Undiagnosed symptoms or test results pending
+    conditions: [pending_tests]
+    outcome: decline
+    reason: Pending diagnostic tests - the carrier will postpone until results are in
+    citation: Postpone, not a permanent decline
+
+  - id: ko_scleroderma
+    label: Scleroderma / systemic sclerosis
+    conditions: [scleroderma]
+    outcome: decline
+
+# ==========================================================================
+# Additional knockouts used by the more conservative carriers.
+# ==========================================================================
+strict_knockouts:
+  - id: ko_assisted_living
+    label: Assisted living or memory care residence
+    conditions: [assisted_living]
+    outcome: decline
+
+  - id: ko_home_health
+    label: Skilled home health care
+    conditions: [home_health_care]
+    when: {skilled_care: true}
+    outcome: decline
+    question: Is the home care skilled nursing, or housekeeping/companion help only?
+
+  - id: ko_schizophrenia
+    label: Schizophrenia or psychotic disorder
+    conditions: [schizophrenia]
+    outcome: decline
+
+  - id: ko_chf_any
+    label: Congestive heart failure
+    conditions: [chf]
+    outcome: decline
+
+  - id: ko_copd_oxygen
+    label: COPD with hospitalisation in the last 12 months
+    conditions: [copd]
+    when: {hospitalized_12mo: true}
+    outcome: decline
+
+  - id: ko_insulin_juvenile
+    label: Insulin-dependent diabetes diagnosed before age 30
+    conditions: [diabetes_type1, diabetes_type2]
+    when: {age_at_diagnosis: {lt: 30}, insulin: true}
+    outcome: decline
+
+  - id: ko_amputation
+    label: Amputation caused by disease
+    conditions: [amputation_disease]
+    when: {cause_disease: true}
+    outcome: decline
+
+  - id: ko_downs
+    label: Down syndrome
+    conditions: [down_syndrome]
+    outcome: decline
+
+# ==========================================================================
+# Level screen - a "yes" here still gets an offer, but at graded rather than
+# level. This is the standard 2-year lookback most of the market uses.
+# ==========================================================================
+level_screen_standard:
+  - id: lv_heart_attack
+    label: Heart attack within 24 months
+    conditions: [heart_attack]
+    when: {months_since_event: {lt: 24}}
+    outcome: graded
+
+  - id: lv_stroke
+    label: Stroke within 24 months
+    conditions: [stroke]
+    when: {months_since_event: {lt: 24}}
+    outcome: graded
+
+  - id: lv_tia
+    label: TIA within 12 months
+    conditions: [tia]
+    when: {months_since_event: {lt: 12}}
+    outcome: graded
+
+  - id: lv_bypass
+    label: Bypass surgery within 24 months
+    conditions: [bypass_surgery]
+    when: {months_since_event: {lt: 24}}
+    outcome: graded
+
+  - id: lv_stent
+    label: Stent or angioplasty within 12 months
+    conditions: [stent_angioplasty]
+    when: {months_since_event: {lt: 12}}
+    outcome: graded
+
+  - id: lv_angina
+    label: Angina within 12 months
+    conditions: [angina]
+    when: {months_since_event: {lt: 12}}
+    outcome: graded
+
+  - id: lv_cancer
+    label: Internal cancer treated within 24 months
+    conditions: [cancer_internal, leukemia_lymphoma, melanoma]
+    when: {months_since_treatment: {lt: 24}}
+    outcome: graded
+
+  - id: lv_cancer_recurrence
+    label: Cancer that has recurred or spread
+    conditions: [cancer_internal, leukemia_lymphoma, melanoma]
+    when: {recurrence: true}
+    outcome: graded
+
+  - id: lv_chf
+    label: Congestive heart failure diagnosed within 24 months
+    conditions: [chf]
+    when: {months_since_diagnosis: {lt: 24}}
+    outcome: graded
+
+  - id: lv_chf_hospital
+    label: Hospitalised for heart failure in the last 12 months
+    conditions: [chf]
+    when: {hospitalized_12mo: true}
+    outcome: graded
+
+  - id: lv_cardiomyopathy
+    label: Cardiomyopathy diagnosed within 24 months
+    conditions: [cardiomyopathy]
+    when: {months_since_diagnosis: {lt: 24}}
+    outcome: graded
+
+  - id: lv_icd
+    label: Implanted defibrillator
+    conditions: [defibrillator_icd]
+    outcome: graded
+
+  - id: lv_pacemaker
+    label: Pacemaker implanted within 6 months
+    conditions: [pacemaker]
+    when: {months_since_implant: {lt: 6}}
+    outcome: graded
+
+  - id: lv_valve
+    label: Heart valve surgery within 24 months
+    conditions: [heart_valve]
+    when: {months_since_event: {lt: 24}}
+    outcome: graded
+
+  - id: lv_aneurysm
+    label: Aneurysm that has not been surgically repaired
+    conditions: [aneurysm]
+    when: {repaired: false}
+    outcome: graded
+    question: Has the aneurysm been surgically repaired?
+
+  - id: lv_pad
+    label: Peripheral or carotid artery disease treated within 24 months
+    conditions: [pad]
+    when: {months_since_event: {lt: 24}}
+    outcome: graded
+
+  - id: lv_blood_clot
+    label: Blood clot within 12 months
+    conditions: [blood_clot]
+    when: {months_since_event: {lt: 12}}
+    outcome: graded
+
+  - id: lv_copd_hospital
+    label: Hospitalised for COPD in the last 12 months
+    conditions: [copd]
+    when: {hospitalized_12mo: true}
+    outcome: graded
+
+  - id: lv_diabetes_complications
+    label: Diabetes with complications
+    conditions: [diabetes_type1, diabetes_type2]
+    when: {complications: true}
+    outcome: graded
+
+  - id: lv_diabetic_complications_named
+    label: Diabetic neuropathy, retinopathy or ulcers
+    conditions: [diabetic_complications]
+    outcome: graded
+
+  - id: lv_insulin_juvenile
+    label: Insulin-dependent diabetes diagnosed before age 30
+    conditions: [diabetes_type1, diabetes_type2]
+    when: {age_at_diagnosis: {lt: 30}, insulin: true}
+    outcome: graded
+
+  - id: lv_amputation
+    label: Amputation caused by disease
+    conditions: [amputation_disease]
+    when: {cause_disease: true}
+    outcome: graded
+
+  - id: lv_transplant
+    label: Organ transplant received
+    conditions: [organ_transplant]
+    when: {pending: false}
+    outcome: graded
+
+  - id: lv_hepatitis_c
+    label: Hepatitis C not treated and cleared
+    conditions: [hepatitis_c]
+    when: {treated_cured: false}
+    outcome: graded
+    question: Has the hepatitis C been treated and cleared?
+
+  - id: lv_hepatitis_b_chronic
+    label: Chronic hepatitis B
+    conditions: [hepatitis_b]
+    when: {chronic: true}
+    outcome: graded
+
+  - id: lv_pancreatitis
+    label: Chronic pancreatitis
+    conditions: [pancreatitis]
+    when: {chronic: true}
+    outcome: graded
+
+  - id: lv_lupus_organ
+    label: Lupus with organ involvement
+    conditions: [lupus]
+    when: {organ_involvement: true}
+    outcome: graded
+
+  - id: lv_ms
+    label: Multiple sclerosis
+    conditions: [multiple_sclerosis]
+    outcome: graded
+
+  - id: lv_parkinsons
+    label: Parkinson's disease
+    conditions: [parkinsons]
+    outcome: graded
+
+  - id: lv_muscular_dystrophy
+    label: Muscular dystrophy
+    conditions: [muscular_dystrophy]
+    outcome: graded
+
+  - id: lv_sickle_cell
+    label: Sickle cell disease
+    conditions: [sickle_cell]
+    outcome: graded
+
+  - id: lv_epilepsy
+    label: Seizure within 12 months
+    conditions: [epilepsy]
+    when: {months_since_event: {lt: 12}}
+    outcome: graded
+
+  - id: lv_bipolar_hospital
+    label: Hospitalised for bipolar disorder within 24 months
+    conditions: [bipolar]
+    when: {hospitalized_24mo: true}
+    outcome: graded
+
+  - id: lv_suicide
+    label: Suicide attempt within 24 months
+    conditions: [suicide_attempt]
+    when: {months_since_event: {lt: 24}}
+    outcome: graded
+
+  - id: lv_substance
+    label: Alcohol or drug treatment within 24 months
+    conditions: [alcohol_abuse, drug_abuse]
+    when: {months_since_treatment: {lt: 24}}
+    outcome: graded
+
+  - id: lv_home_health
+    label: Skilled home health care
+    conditions: [home_health_care]
+    when: {skilled_care: true}
+    outcome: graded
+
+  - id: lv_hospitalization
+    label: Hospitalised within the last 6 months
+    conditions: [hospitalization_recent]
+    when: {months_since_event: {lt: 6}}
+    outcome: graded
+
+  - id: lv_felony
+    label: Currently on probation or parole
+    conditions: [felony_probation]
+    when: {current: true}
+    outcome: graded
+
+  - id: lv_downs
+    label: Down syndrome
+    conditions: [down_syndrome]
+    outcome: graded
+
+  - id: lv_schizophrenia
+    label: Schizophrenia or psychotic disorder
+    conditions: [schizophrenia]
+    outcome: graded
+
+  - id: lv_copd
+    label: COPD or emphysema
+    conditions: [copd]
+    outcome: level
+    note: Placeholder - carriers that rate plain COPD override this rule.
+
+# ==========================================================================
+# Liberal variant: shorter lookbacks. Used by the carriers known for taking
+# cardiac and cancer history sooner than the rest of the market.
+# ==========================================================================
+level_screen_liberal:
+  - id: lv_heart_attack
+    label: Heart attack within 12 months
+    conditions: [heart_attack]
+    when: {months_since_event: {lt: 12}}
+    outcome: graded
+
+  - id: lv_stroke
+    label: Stroke within 12 months
+    conditions: [stroke]
+    when: {months_since_event: {lt: 12}}
+    outcome: graded
+
+  - id: lv_tia
+    label: TIA within 6 months
+    conditions: [tia]
+    when: {months_since_event: {lt: 6}}
+    outcome: graded
+
+  - id: lv_bypass
+    label: Bypass surgery within 12 months
+    conditions: [bypass_surgery]
+    when: {months_since_event: {lt: 12}}
+    outcome: graded
+
+  - id: lv_stent
+    label: Stent or angioplasty within 6 months
+    conditions: [stent_angioplasty]
+    when: {months_since_event: {lt: 6}}
+    outcome: graded
+
+  - id: lv_cancer
+    label: Internal cancer treated within 12 months
+    conditions: [cancer_internal, leukemia_lymphoma, melanoma]
+    when: {months_since_treatment: {lt: 12}}
+    outcome: graded
+
+  - id: lv_chf
+    label: Congestive heart failure diagnosed within 12 months
+    conditions: [chf]
+    when: {months_since_diagnosis: {lt: 12}}
+    outcome: graded
+
+  - id: lv_substance
+    label: Alcohol or drug treatment within 12 months
+    conditions: [alcohol_abuse, drug_abuse]
+    when: {months_since_treatment: {lt: 12}}
+    outcome: graded
+
+# ==========================================================================
+# Conservative variant: 36-month lookbacks.
+# ==========================================================================
+level_screen_conservative:
+  - id: lv_heart_attack
+    label: Heart attack within 36 months
+    conditions: [heart_attack]
+    when: {months_since_event: {lt: 36}}
+    outcome: graded
+
+  - id: lv_stroke
+    label: Stroke within 36 months
+    conditions: [stroke]
+    when: {months_since_event: {lt: 36}}
+    outcome: graded
+
+  - id: lv_bypass
+    label: Bypass surgery within 36 months
+    conditions: [bypass_surgery]
+    when: {months_since_event: {lt: 36}}
+    outcome: graded
+
+  - id: lv_stent
+    label: Stent or angioplasty within 24 months
+    conditions: [stent_angioplasty]
+    when: {months_since_event: {lt: 24}}
+    outcome: graded
+
+  - id: lv_cancer
+    label: Internal cancer treated within 36 months
+    conditions: [cancer_internal, leukemia_lymphoma, melanoma]
+    when: {months_since_treatment: {lt: 36}}
+    outcome: graded
+
+  - id: lv_chf
+    label: Congestive heart failure
+    conditions: [chf]
+    outcome: graded
+
+  - id: lv_copd
+    label: COPD or emphysema
+    conditions: [copd]
+    outcome: graded
+
+  - id: lv_insulin
+    label: Insulin-dependent diabetes
+    conditions: [diabetes_type1, diabetes_type2]
+    when: {insulin: true}
+    outcome: graded
+
+# ==========================================================================
+# Graded screen - a "yes" here drops the applicant past graded to modified.
+# These are the same events, but inside a tighter window.
+# ==========================================================================
+graded_screen_standard:
+  - id: gr_heart_attack
+    label: Heart attack within 12 months
+    conditions: [heart_attack]
+    when: {months_since_event: {lt: 12}}
+    outcome: modified
+
+  - id: gr_stroke
+    label: Stroke within 12 months
+    conditions: [stroke]
+    when: {months_since_event: {lt: 12}}
+    outcome: modified
+
+  - id: gr_bypass
+    label: Bypass or valve surgery within 12 months
+    conditions: [bypass_surgery, heart_valve]
+    when: {months_since_event: {lt: 12}}
+    outcome: modified
+
+  - id: gr_cancer
+    label: Cancer treated within 12 months
+    conditions: [cancer_internal, leukemia_lymphoma, melanoma]
+    when: {months_since_treatment: {lt: 12}}
+    outcome: modified
+
+  - id: gr_chf_hospital
+    label: Hospitalised for heart failure in the last 12 months
+    conditions: [chf]
+    when: {hospitalized_12mo: true}
+    outcome: modified
+
+  - id: gr_copd_hospital
+    label: Hospitalised for COPD in the last 12 months
+    conditions: [copd]
+    when: {hospitalized_12mo: true}
+    outcome: modified
+
+  - id: gr_multiple_strokes
+    label: More than one stroke
+    conditions: [stroke]
+    when: {count: {gte: 2}}
+    outcome: modified
+
+  - id: gr_hospitalization
+    label: Hospitalised within the last 3 months
+    conditions: [hospitalization_recent]
+    when: {months_since_event: {lt: 3}}
+    outcome: modified
+
+# ==========================================================================
+# Chronic conditions that most of the market takes at level, but which the
+# tighter carriers rate. Kept separate so a carrier can adopt just this.
+# ==========================================================================
+chronic_screen_tight:
+  - id: ch_insulin
+    label: Insulin-dependent diabetes
+    conditions: [diabetes_type1, diabetes_type2]
+    when: {insulin: true}
+    outcome: graded
+
+  - id: ch_copd
+    label: COPD or emphysema
+    conditions: [copd]
+    outcome: graded
+
+  - id: ch_chf
+    label: Congestive heart failure
+    conditions: [chf]
+    outcome: graded
+
+  - id: ch_afib_anticoag
+    label: Atrial fibrillation
+    conditions: [afib]
+    outcome: level
+    note: Most carriers take controlled atrial fibrillation at level.
+
+# ==========================================================================
+# Preferred-class screen. Only applies to products that actually publish a
+# preferred class; any of these knocks the applicant down to plain level.
+# ==========================================================================
+preferred_screen:
+  - id: pf_tobacco
+    label: Tobacco use
+    applicant: {tobacco: true}
+    outcome: level
+
+  - id: pf_any_major
+    label: Cardiac, stroke, cancer, COPD or diabetes history
+    conditions: [heart_attack, stroke, tia, bypass_surgery, stent_angioplasty, chf,
+                 cancer_internal, leukemia_lymphoma, melanoma, copd, diabetes_type1,
+                 diabetes_type2, ckd, afib, pad, cardiomyopathy]
+    outcome: level
+
+  - id: pf_behavioral
+    label: Treated behavioural health history
+    conditions: [bipolar, schizophrenia, alcohol_abuse, drug_abuse, suicide_attempt]
+    outcome: level
+
+# ==========================================================================
+# Behavioural / lifestyle pack, used by carriers that screen these harder.
+# ==========================================================================
+behavioral_screen_tight:
+  - id: bh_substance_5yr
+    label: Alcohol or drug treatment within 5 years
+    conditions: [alcohol_abuse, drug_abuse]
+    when: {months_since_treatment: {lt: 60}}
+    outcome: graded
+
+  - id: bh_felony_5yr
+    label: Felony conviction, probation or parole within 5 years
+    conditions: [felony_probation]
+    outcome: graded
+
+  - id: bh_dui
+    label: Two or more DUIs in the last 5 years
+    conditions: [dui]
+    when: {count_5yr: {gte: 2}}
+    outcome: graded
+
+  - id: bh_opioid
+    label: Long-term prescription opioid use
+    conditions: [chronic_opioid]
+    outcome: graded
+
+# ==========================================================================
+# Guaranteed issue: no health questions at all. Only age and face limits,
+# which live on the product itself, apply.
+# ==========================================================================
+gi_no_questions: []

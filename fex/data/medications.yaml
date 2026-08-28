@@ -1,0 +1,322 @@
+# Medication -> condition inference.
+#
+# `confidence` controls what the engine does with a match:
+#   high    the condition is added to the applicant automatically
+#   medium  the condition is added, but flagged for the agent to confirm
+#   low     nothing is added; the engine raises a question instead, because the
+#           drug has several common indications and guessing would be wrong
+#
+# `set` writes attributes onto the implied condition (e.g. an insulin product
+# sets `insulin: true` on diabetes, which is what actually moves the tier).
+# `flags` are free-form markers carrier rules can match on as conditions.
+
+# --- Blood pressure / general cardiac -------------------------------------
+- {ingredient: lisinopril, brands: [Zestril, Prinivil], implies: [hypertension], confidence: medium, note: "Also used post-MI and in heart failure."}
+- {ingredient: enalapril, brands: [Vasotec], implies: [hypertension], confidence: medium}
+- {ingredient: ramipril, brands: [Altace], implies: [hypertension], confidence: medium}
+- {ingredient: losartan, brands: [Cozaar], implies: [hypertension], confidence: high}
+- {ingredient: valsartan, brands: [Diovan], implies: [hypertension], confidence: medium}
+- {ingredient: olmesartan, brands: [Benicar], implies: [hypertension], confidence: high}
+- {ingredient: irbesartan, brands: [Avapro], implies: [hypertension], confidence: high}
+- {ingredient: amlodipine, brands: [Norvasc], implies: [hypertension], confidence: high}
+- {ingredient: nifedipine, brands: [Procardia, Adalat], implies: [hypertension], confidence: high}
+- {ingredient: diltiazem, brands: [Cardizem, Tiazac], implies: [hypertension, afib], confidence: low, note: "Blood pressure or rate control for atrial fibrillation."}
+- {ingredient: verapamil, brands: [Calan, Verelan], implies: [hypertension, afib], confidence: low}
+- {ingredient: metoprolol, brands: [Lopressor, Toprol XL], implies: [hypertension], confidence: low, note: "Very common after a heart attack and in heart failure - ask why it was started."}
+- {ingredient: atenolol, brands: [Tenormin], implies: [hypertension], confidence: medium}
+- {ingredient: carvedilol, brands: [Coreg], implies: [chf], confidence: low, note: "Strongly associated with heart failure or post-MI, but also used for plain hypertension."}
+- {ingredient: bisoprolol, brands: [Zebeta], implies: [hypertension], confidence: medium}
+- {ingredient: propranolol, brands: [Inderal], implies: [hypertension], confidence: low, note: "Also used for tremor, migraine and anxiety."}
+- {ingredient: hydrochlorothiazide, brands: [Microzide, HCTZ], implies: [hypertension], confidence: high}
+- {ingredient: chlorthalidone, brands: [Thalitone], implies: [hypertension], confidence: high}
+- {ingredient: hydralazine, brands: [Apresoline], implies: [hypertension], confidence: medium}
+- {ingredient: clonidine, brands: [Catapres], implies: [hypertension], confidence: medium}
+- {ingredient: triamterene-hydrochlorothiazide, brands: [Dyazide, Maxzide], implies: [hypertension], confidence: high}
+
+# --- Heart failure / arrhythmia -------------------------------------------
+- {ingredient: furosemide, brands: [Lasix, water pill, fluid pill], implies: [chf], confidence: low, note: "The classic water pill. Used for heart failure, but also for simple leg swelling, kidney disease and liver disease - always ask."}
+- {ingredient: bumetanide, brands: [Bumex], implies: [chf], confidence: low}
+- {ingredient: torsemide, brands: [Demadex], implies: [chf], confidence: low}
+- {ingredient: spironolactone, brands: [Aldactone], implies: [chf], confidence: low, note: "Heart failure, ascites from liver disease, or resistant hypertension."}
+- {ingredient: eplerenone, brands: [Inspra], implies: [chf], confidence: medium}
+- {ingredient: sacubitril-valsartan, brands: [Entresto], implies: [chf], confidence: high, note: "Prescribed specifically for heart failure with reduced ejection fraction."}
+- {ingredient: ivabradine, brands: [Corlanor], implies: [chf], confidence: high}
+- {ingredient: digoxin, brands: [Lanoxin, Digitek], implies: [chf, afib], confidence: medium}
+- {ingredient: amiodarone, brands: [Cordarone, Pacerone], implies: [afib], confidence: high, note: "Antiarrhythmic - confirm whether an ICD or pacemaker is also present."}
+- {ingredient: sotalol, brands: [Betapace], implies: [afib], confidence: high}
+- {ingredient: flecainide, brands: [Tambocor], implies: [afib], confidence: high}
+- {ingredient: dofetilide, brands: [Tikosyn], implies: [afib], confidence: high}
+- {ingredient: propafenone, brands: [Rythmol], implies: [afib], confidence: high}
+- {ingredient: dapagliflozin-hf, brands: [], implies: [chf], confidence: low}
+
+# --- Angina / coronary -----------------------------------------------------
+- {ingredient: nitroglycerin, brands: [Nitrostat, Nitro-Dur, Nitrolingual], implies: [angina], confidence: high, note: "Indicates known coronary disease; ask about stents, bypass or heart attack."}
+- {ingredient: isosorbide mononitrate, brands: [Imdur], implies: [angina], confidence: high}
+- {ingredient: isosorbide dinitrate, brands: [Isordil], implies: [angina], confidence: high}
+- {ingredient: ranolazine, brands: [Ranexa], implies: [angina], confidence: high}
+
+# --- Anticoagulants / antiplatelets ---------------------------------------
+- {ingredient: warfarin, brands: [Coumadin, Jantoven], implies: [afib], confidence: low, note: "Atrial fibrillation, a blood clot, or a mechanical heart valve - the reason changes the tier."}
+- {ingredient: apixaban, brands: [Eliquis], implies: [afib], confidence: low, note: "Usually atrial fibrillation or DVT/PE - confirm which."}
+- {ingredient: rivaroxaban, brands: [Xarelto], implies: [afib], confidence: low, note: "Usually atrial fibrillation or DVT/PE - confirm which."}
+- {ingredient: dabigatran, brands: [Pradaxa], implies: [afib], confidence: low}
+- {ingredient: edoxaban, brands: [Savaysa], implies: [afib], confidence: low}
+- {ingredient: clopidogrel, brands: [Plavix], implies: [stent_angioplasty], confidence: low, note: "Typically follows a stent, heart attack, stroke or PAD."}
+- {ingredient: ticagrelor, brands: [Brilinta], implies: [stent_angioplasty], confidence: medium, note: "Almost always follows an acute coronary event or stent."}
+- {ingredient: prasugrel, brands: [Effient], implies: [stent_angioplasty], confidence: medium}
+- {ingredient: cilostazol, brands: [Pletal], implies: [pad], confidence: high}
+- {ingredient: pentoxifylline, brands: [Trental], implies: [pad], confidence: medium}
+
+# --- Lipids ----------------------------------------------------------------
+- {ingredient: atorvastatin, brands: [Lipitor], implies: [high_cholesterol], confidence: high}
+- {ingredient: simvastatin, brands: [Zocor], implies: [high_cholesterol], confidence: high}
+- {ingredient: rosuvastatin, brands: [Crestor], implies: [high_cholesterol], confidence: high}
+- {ingredient: pravastatin, brands: [Pravachol], implies: [high_cholesterol], confidence: high}
+- {ingredient: lovastatin, brands: [Mevacor], implies: [high_cholesterol], confidence: high}
+- {ingredient: ezetimibe, brands: [Zetia], implies: [high_cholesterol], confidence: high}
+- {ingredient: fenofibrate, brands: [Tricor, Trilipix], implies: [high_cholesterol], confidence: high}
+- {ingredient: gemfibrozil, brands: [Lopid], implies: [high_cholesterol], confidence: high}
+- {ingredient: evolocumab, brands: [Repatha], implies: [high_cholesterol], confidence: high}
+- {ingredient: alirocumab, brands: [Praluent], implies: [high_cholesterol], confidence: high}
+
+# --- Diabetes: orals and injectables --------------------------------------
+- {ingredient: metformin, brands: [Glucophage, Fortamet, Riomet], implies: [diabetes_type2], confidence: high}
+- {ingredient: glipizide, brands: [Glucotrol], implies: [diabetes_type2], confidence: high}
+- {ingredient: glyburide, brands: [DiaBeta, Micronase], implies: [diabetes_type2], confidence: high}
+- {ingredient: glimepiride, brands: [Amaryl], implies: [diabetes_type2], confidence: high}
+- {ingredient: sitagliptin, brands: [Januvia, Janumet], implies: [diabetes_type2], confidence: high}
+- {ingredient: linagliptin, brands: [Tradjenta, Jentadueto], implies: [diabetes_type2], confidence: high}
+- {ingredient: saxagliptin, brands: [Onglyza], implies: [diabetes_type2], confidence: high}
+- {ingredient: empagliflozin, brands: [Jardiance, Synjardy], implies: [diabetes_type2], confidence: medium, note: "Also approved for heart failure and chronic kidney disease."}
+- {ingredient: dapagliflozin, brands: [Farxiga, Xigduo], implies: [diabetes_type2], confidence: medium, note: "Also approved for heart failure and chronic kidney disease."}
+- {ingredient: canagliflozin, brands: [Invokana], implies: [diabetes_type2], confidence: high}
+- {ingredient: pioglitazone, brands: [Actos], implies: [diabetes_type2], confidence: high}
+- {ingredient: rosiglitazone, brands: [Avandia], implies: [diabetes_type2], confidence: high}
+- {ingredient: repaglinide, brands: [Prandin], implies: [diabetes_type2], confidence: high}
+- {ingredient: acarbose, brands: [Precose], implies: [diabetes_type2], confidence: high}
+- {ingredient: semaglutide, brands: [Ozempic, Rybelsus, Wegovy], implies: [diabetes_type2], confidence: low, note: "Ozempic/Rybelsus are for diabetes; Wegovy is for weight loss. Ask which and why."}
+- {ingredient: tirzepatide, brands: [Mounjaro, Zepbound], implies: [diabetes_type2], confidence: low, note: "Mounjaro is for diabetes; Zepbound is for weight loss."}
+- {ingredient: dulaglutide, brands: [Trulicity], implies: [diabetes_type2], confidence: high}
+- {ingredient: liraglutide, brands: [Victoza, Saxenda], implies: [diabetes_type2], confidence: low, note: "Victoza is for diabetes; Saxenda is for weight loss."}
+- {ingredient: exenatide, brands: [Byetta, Bydureon], implies: [diabetes_type2], confidence: high}
+
+# --- Insulins (these set the insulin flag, which moves the tier) -----------
+- {ingredient: insulin glargine, brands: [Lantus, Basaglar, Toujeo, Semglee, Rezvoglar], implies: [diabetes_type2], set: {diabetes_type2: {insulin: true}}, confidence: high}
+- {ingredient: insulin detemir, brands: [Levemir], implies: [diabetes_type2], set: {diabetes_type2: {insulin: true}}, confidence: high}
+- {ingredient: insulin degludec, brands: [Tresiba], implies: [diabetes_type2], set: {diabetes_type2: {insulin: true}}, confidence: high}
+- {ingredient: insulin aspart, brands: [NovoLog, Fiasp], implies: [diabetes_type2], set: {diabetes_type2: {insulin: true}}, confidence: high}
+- {ingredient: insulin lispro, brands: [Humalog, Admelog, Lyumjev], implies: [diabetes_type2], set: {diabetes_type2: {insulin: true}}, confidence: high}
+- {ingredient: insulin nph, brands: [Humulin N, Novolin N], implies: [diabetes_type2], set: {diabetes_type2: {insulin: true}}, confidence: high}
+- {ingredient: insulin regular, brands: [Humulin R, Novolin R], implies: [diabetes_type2], set: {diabetes_type2: {insulin: true}}, confidence: high}
+- {ingredient: insulin, brands: [insulin pen, insulin pump, sliding scale insulin], implies: [diabetes_type2], set: {diabetes_type2: {insulin: true}}, confidence: high, note: "Insulin use is the single biggest driver of final expense diabetes rules - confirm the age it was started."}
+
+# --- Diabetic complications -----------------------------------------------
+- {ingredient: gabapentin, brands: [Neurontin, Gralise], implies: [diabetic_complications, epilepsy], confidence: low, note: "Nerve pain, seizures or general chronic pain - confirm the indication."}
+- {ingredient: pregabalin, brands: [Lyrica], implies: [diabetic_complications], confidence: low, note: "Diabetic nerve pain or fibromyalgia."}
+
+# --- Respiratory -----------------------------------------------------------
+- {ingredient: albuterol, brands: [ProAir, Ventolin, Proventil], implies: [asthma], confidence: low, note: "Rescue inhaler for either asthma or COPD."}
+- {ingredient: levalbuterol, brands: [Xopenex], implies: [asthma], confidence: low}
+- {ingredient: tiotropium, brands: [Spiriva], implies: [copd], confidence: high}
+- {ingredient: umeclidinium, brands: [Incruse Ellipta], implies: [copd], confidence: high}
+- {ingredient: umeclidinium-vilanterol, brands: [Anoro Ellipta], implies: [copd], confidence: high}
+- {ingredient: tiotropium-olodaterol, brands: [Stiolto Respimat], implies: [copd], confidence: high}
+- {ingredient: fluticasone-umeclidinium-vilanterol, brands: [Trelegy Ellipta], implies: [copd], confidence: high, note: "Triple therapy - generally indicates moderate to severe COPD."}
+- {ingredient: budesonide-formoterol, brands: [Symbicort, Breyna], implies: [copd, asthma], confidence: low}
+- {ingredient: fluticasone-salmeterol, brands: [Advair, Wixela, AirDuo], implies: [copd, asthma], confidence: low}
+- {ingredient: fluticasone-vilanterol, brands: [Breo Ellipta], implies: [copd, asthma], confidence: low}
+- {ingredient: ipratropium, brands: [Atrovent, Combivent], implies: [copd], confidence: medium}
+- {ingredient: roflumilast, brands: [Daliresp], implies: [copd], confidence: high, note: "Reserved for severe COPD with chronic bronchitis and exacerbations."}
+- {ingredient: theophylline, brands: [Theo-24, Uniphyl], implies: [copd], confidence: medium}
+- {ingredient: montelukast, brands: [Singulair], implies: [asthma], confidence: medium, note: "Also prescribed for allergic rhinitis."}
+- {ingredient: pirfenidone, brands: [Esbriet], implies: [pulmonary_fibrosis], confidence: high}
+- {ingredient: nintedanib, brands: [Ofev], implies: [pulmonary_fibrosis], confidence: high}
+
+# --- Dementia (near-universal final expense knockouts) --------------------
+- {ingredient: donepezil, brands: [Aricept], implies: [dementia], confidence: high, note: "Prescribed for Alzheimer's/dementia. A knockout with almost every final expense carrier."}
+- {ingredient: memantine, brands: [Namenda], implies: [dementia], confidence: high, note: "Prescribed for moderate to severe Alzheimer's. A knockout with almost every carrier."}
+- {ingredient: rivastigmine, brands: [Exelon], implies: [dementia], confidence: high}
+- {ingredient: galantamine, brands: [Razadyne], implies: [dementia], confidence: high}
+- {ingredient: donepezil-memantine, brands: [Namzaric], implies: [dementia], confidence: high}
+- {ingredient: lecanemab, brands: [Leqembi], implies: [dementia], confidence: high}
+- {ingredient: donanemab, brands: [Kisunla], implies: [dementia], confidence: high}
+- {ingredient: aducanumab, brands: [Aduhelm], implies: [dementia], confidence: high}
+
+# --- Parkinson's -----------------------------------------------------------
+- {ingredient: carbidopa-levodopa, brands: [Sinemet, Rytary, Duopa], implies: [parkinsons], confidence: high}
+- {ingredient: rasagiline, brands: [Azilect], implies: [parkinsons], confidence: high}
+- {ingredient: selegiline, brands: [Eldepryl, Zelapar], implies: [parkinsons], confidence: high}
+- {ingredient: entacapone, brands: [Comtan, Stalevo], implies: [parkinsons], confidence: high}
+- {ingredient: amantadine, brands: [Gocovri, Osmolex], implies: [parkinsons], confidence: medium}
+- {ingredient: pramipexole, brands: [Mirapex], implies: [parkinsons], confidence: low, note: "Also very commonly prescribed for restless legs syndrome."}
+- {ingredient: ropinirole, brands: [Requip], implies: [parkinsons], confidence: low, note: "Also very commonly prescribed for restless legs syndrome."}
+
+# --- Seizure / MS / ALS ----------------------------------------------------
+- {ingredient: levetiracetam, brands: [Keppra], implies: [epilepsy], confidence: high}
+- {ingredient: phenytoin, brands: [Dilantin], implies: [epilepsy], confidence: high}
+- {ingredient: carbamazepine, brands: [Tegretol], implies: [epilepsy], confidence: low, note: "Also used for trigeminal neuralgia and bipolar disorder."}
+- {ingredient: oxcarbazepine, brands: [Trileptal], implies: [epilepsy], confidence: medium}
+- {ingredient: valproate, brands: [Depakote, Depakene], implies: [epilepsy, bipolar], confidence: low, note: "Seizures, bipolar disorder or migraine prevention."}
+- {ingredient: lamotrigine, brands: [Lamictal], implies: [epilepsy, bipolar], confidence: low, note: "Seizures or bipolar disorder."}
+- {ingredient: topiramate, brands: [Topamax, Trokendi], implies: [epilepsy], confidence: low, note: "Also widely used for migraine prevention and weight loss."}
+- {ingredient: zonisamide, brands: [Zonegran], implies: [epilepsy], confidence: medium}
+- {ingredient: phenobarbital, brands: [], implies: [epilepsy], confidence: high}
+- {ingredient: lacosamide, brands: [Vimpat], implies: [epilepsy], confidence: high}
+- {ingredient: glatiramer, brands: [Copaxone, Glatopa], implies: [multiple_sclerosis], confidence: high}
+- {ingredient: interferon beta, brands: [Avonex, Rebif, Betaseron, Plegridy], implies: [multiple_sclerosis], confidence: high}
+- {ingredient: ocrelizumab, brands: [Ocrevus], implies: [multiple_sclerosis], confidence: high}
+- {ingredient: natalizumab, brands: [Tysabri], implies: [multiple_sclerosis], confidence: high}
+- {ingredient: fingolimod, brands: [Gilenya], implies: [multiple_sclerosis], confidence: high}
+- {ingredient: dimethyl fumarate, brands: [Tecfidera, Vumerity], implies: [multiple_sclerosis], confidence: high}
+- {ingredient: teriflunomide, brands: [Aubagio], implies: [multiple_sclerosis], confidence: high}
+- {ingredient: riluzole, brands: [Rilutek, Tiglutik], implies: [als], confidence: high}
+- {ingredient: edaravone, brands: [Radicava], implies: [als], confidence: high}
+- {ingredient: tetrabenazine, brands: [Xenazine, Austedo], implies: [huntingtons], confidence: medium}
+
+# --- Psychiatric -----------------------------------------------------------
+- {ingredient: sertraline, brands: [Zoloft], implies: [depression], confidence: medium}
+- {ingredient: fluoxetine, brands: [Prozac], implies: [depression], confidence: medium}
+- {ingredient: escitalopram, brands: [Lexapro], implies: [depression], confidence: medium}
+- {ingredient: citalopram, brands: [Celexa], implies: [depression], confidence: medium}
+- {ingredient: paroxetine, brands: [Paxil], implies: [depression], confidence: medium}
+- {ingredient: venlafaxine, brands: [Effexor], implies: [depression], confidence: medium}
+- {ingredient: desvenlafaxine, brands: [Pristiq], implies: [depression], confidence: medium}
+- {ingredient: duloxetine, brands: [Cymbalta], implies: [depression], confidence: low, note: "Also prescribed for diabetic nerve pain and fibromyalgia."}
+- {ingredient: bupropion, brands: [Wellbutrin, Zyban], implies: [depression], confidence: low, note: "Also prescribed for smoking cessation - if that is the reason, confirm tobacco use."}
+- {ingredient: mirtazapine, brands: [Remeron], implies: [depression], confidence: medium}
+- {ingredient: trazodone, brands: [Desyrel], implies: [depression], confidence: low, note: "At low doses this is usually prescribed purely as a sleep aid."}
+- {ingredient: amitriptyline, brands: [Elavil], implies: [depression], confidence: low, note: "Often prescribed for nerve pain, migraine or sleep rather than depression."}
+- {ingredient: nortriptyline, brands: [Pamelor], implies: [depression], confidence: low}
+- {ingredient: buspirone, brands: [Buspar], implies: [anxiety], confidence: high}
+- {ingredient: alprazolam, brands: [Xanax], implies: [anxiety], confidence: high}
+- {ingredient: lorazepam, brands: [Ativan], implies: [anxiety], confidence: medium}
+- {ingredient: clonazepam, brands: [Klonopin], implies: [anxiety], confidence: low, note: "Anxiety or seizure control."}
+- {ingredient: diazepam, brands: [Valium], implies: [anxiety], confidence: low, note: "Anxiety, muscle spasm or alcohol withdrawal."}
+- {ingredient: quetiapine, brands: [Seroquel], implies: [bipolar], confidence: low, note: "Bipolar disorder, schizophrenia, or off-label for sleep and agitation in dementia."}
+- {ingredient: risperidone, brands: [Risperdal], implies: [schizophrenia], confidence: low, note: "Schizophrenia, bipolar disorder, or agitation in dementia."}
+- {ingredient: olanzapine, brands: [Zyprexa], implies: [schizophrenia], confidence: low}
+- {ingredient: aripiprazole, brands: [Abilify], implies: [bipolar], confidence: low, note: "Bipolar, schizophrenia, or add-on for depression."}
+- {ingredient: paliperidone, brands: [Invega], implies: [schizophrenia], confidence: high}
+- {ingredient: haloperidol, brands: [Haldol], implies: [schizophrenia], confidence: medium}
+- {ingredient: clozapine, brands: [Clozaril, Versacloz], implies: [schizophrenia], confidence: high, note: "Reserved for treatment-resistant schizophrenia."}
+- {ingredient: ziprasidone, brands: [Geodon], implies: [schizophrenia], confidence: medium}
+- {ingredient: lithium, brands: [Lithobid, Eskalith], implies: [bipolar], confidence: high}
+- {ingredient: lurasidone, brands: [Latuda], implies: [bipolar], confidence: high}
+
+# --- Substance use ---------------------------------------------------------
+- {ingredient: buprenorphine-naloxone, brands: [Suboxone, Zubsolv], implies: [drug_abuse], confidence: high, note: "Medication-assisted treatment for opioid dependence."}
+- {ingredient: buprenorphine, brands: [Subutex, Sublocade, Belbuca], implies: [drug_abuse], confidence: low, note: "Opioid dependence treatment or chronic pain - confirm which."}
+- {ingredient: methadone, brands: [Dolophine, Methadose], implies: [drug_abuse], confidence: low, note: "Opioid dependence programme or chronic pain management."}
+- {ingredient: naltrexone, brands: [Vivitrol, Revia], implies: [alcohol_abuse, drug_abuse], confidence: high}
+- {ingredient: acamprosate, brands: [Campral], implies: [alcohol_abuse], confidence: high}
+- {ingredient: disulfiram, brands: [Antabuse], implies: [alcohol_abuse], confidence: high}
+- {ingredient: varenicline, brands: [Chantix], implies: [], flags: [tobacco_cessation], confidence: high, note: "Smoking cessation - the applicant should be quoted tobacco unless the quit date meets the carrier's window."}
+- {ingredient: nicotine, brands: [Nicoderm, Nicorette, nicotine patch, nicotine gum], implies: [], flags: [tobacco_cessation], confidence: high}
+- {ingredient: thiamine, brands: [], implies: [], confidence: low, note: "High-dose thiamine is often prescribed alongside alcohol use disorder."}
+
+# --- Opioids / chronic pain ------------------------------------------------
+- {ingredient: oxycodone, brands: [OxyContin, Roxicodone, Percocet], implies: [], flags: [chronic_opioid], confidence: medium, note: "Long-term opioid use is a separate question on most final expense applications."}
+- {ingredient: hydrocodone-acetaminophen, brands: [Norco, Vicodin, Lortab], implies: [], flags: [chronic_opioid], confidence: medium}
+- {ingredient: morphine, brands: [MS Contin, Kadian], implies: [], flags: [chronic_opioid], confidence: medium}
+- {ingredient: fentanyl, brands: [Duragesic], implies: [], flags: [chronic_opioid], confidence: high, note: "Transdermal fentanyl signals severe chronic pain or palliative care."}
+- {ingredient: hydromorphone, brands: [Dilaudid], implies: [], flags: [chronic_opioid], confidence: high}
+- {ingredient: tramadol, brands: [Ultram], implies: [], flags: [chronic_opioid], confidence: low}
+- {ingredient: oxymorphone, brands: [Opana], implies: [], flags: [chronic_opioid], confidence: high}
+
+# --- Oncology --------------------------------------------------------------
+- {ingredient: tamoxifen, brands: [Soltamox], implies: [cancer_internal], confidence: high, note: "Breast cancer - typically a 5 to 10 year course, so treatment may be ongoing."}
+- {ingredient: anastrozole, brands: [Arimidex], implies: [cancer_internal], confidence: high}
+- {ingredient: letrozole, brands: [Femara], implies: [cancer_internal], confidence: high}
+- {ingredient: exemestane, brands: [Aromasin], implies: [cancer_internal], confidence: high}
+- {ingredient: bicalutamide, brands: [Casodex], implies: [cancer_internal], confidence: high}
+- {ingredient: leuprolide, brands: [Lupron, Eligard], implies: [cancer_internal], confidence: high}
+- {ingredient: abiraterone, brands: [Zytiga], implies: [cancer_internal], set: {cancer_internal: {currently_treated: true}}, confidence: high}
+- {ingredient: enzalutamide, brands: [Xtandi], implies: [cancer_internal], set: {cancer_internal: {currently_treated: true}}, confidence: high}
+- {ingredient: imatinib, brands: [Gleevec], implies: [leukemia_lymphoma], set: {leukemia_lymphoma: {currently_treated: true}}, confidence: high}
+- {ingredient: ibrutinib, brands: [Imbruvica], implies: [leukemia_lymphoma], set: {leukemia_lymphoma: {currently_treated: true}}, confidence: high}
+- {ingredient: lenalidomide, brands: [Revlimid], implies: [leukemia_lymphoma], set: {leukemia_lymphoma: {currently_treated: true}}, confidence: high}
+- {ingredient: rituximab, brands: [Rituxan], implies: [leukemia_lymphoma], confidence: low, note: "Lymphoma/leukemia, but also rheumatoid arthritis and vasculitis."}
+- {ingredient: capecitabine, brands: [Xeloda], implies: [cancer_internal], set: {cancer_internal: {currently_treated: true}}, confidence: high}
+- {ingredient: pembrolizumab, brands: [Keytruda], implies: [cancer_internal], set: {cancer_internal: {currently_treated: true}}, confidence: high}
+- {ingredient: nivolumab, brands: [Opdivo], implies: [cancer_internal], set: {cancer_internal: {currently_treated: true}}, confidence: high}
+- {ingredient: palbociclib, brands: [Ibrance], implies: [cancer_internal], set: {cancer_internal: {currently_treated: true}}, confidence: high}
+- {ingredient: osimertinib, brands: [Tagrisso], implies: [cancer_internal], set: {cancer_internal: {currently_treated: true}}, confidence: high}
+- {ingredient: methotrexate, brands: [Trexall, Otrexup, Rasuvo], implies: [rheumatoid_arthritis], confidence: low, note: "Low weekly doses are for rheumatoid arthritis or psoriasis; high doses are chemotherapy."}
+- {ingredient: hydroxyurea, brands: [Hydrea, Droxia, Siklos], implies: [sickle_cell], confidence: low, note: "Sickle cell disease or a myeloproliferative blood disorder."}
+- {ingredient: ondansetron, brands: [Zofran], implies: [], confidence: low, note: "Anti-nausea - frequently seen alongside chemotherapy."}
+
+# --- Kidney ----------------------------------------------------------------
+- {ingredient: sevelamer, brands: [Renvela, Renagel], implies: [ckd], set: {ckd: {stage: 5}}, confidence: high, note: "Phosphate binder - almost exclusively advanced kidney disease or dialysis."}
+- {ingredient: lanthanum, brands: [Fosrenol], implies: [ckd], confidence: high}
+- {ingredient: calcium acetate, brands: [PhosLo], implies: [ckd], confidence: high}
+- {ingredient: cinacalcet, brands: [Sensipar], implies: [ckd], confidence: high}
+- {ingredient: epoetin alfa, brands: [Procrit, Epogen, Retacrit], implies: [ckd], confidence: high, note: "Anemia of chronic kidney disease - ask directly about dialysis."}
+- {ingredient: darbepoetin, brands: [Aranesp], implies: [ckd], confidence: high}
+- {ingredient: patiromer, brands: [Veltassa], implies: [ckd], confidence: high}
+- {ingredient: sodium zirconium, brands: [Lokelma], implies: [ckd], confidence: high}
+- {ingredient: calcitriol, brands: [Rocaltrol], implies: [ckd], confidence: low}
+- {ingredient: tolvaptan, brands: [Jynarque, Samsca], implies: [ckd], confidence: high}
+
+# --- Liver / hepatitis -----------------------------------------------------
+- {ingredient: lactulose, brands: [Enulose, Generlac], implies: [cirrhosis], confidence: low, note: "Constipation, but at hepatic-encephalopathy dosing it points to cirrhosis."}
+- {ingredient: rifaximin, brands: [Xifaxan], implies: [cirrhosis], confidence: low, note: "Hepatic encephalopathy from cirrhosis, or IBS with diarrhoea."}
+- {ingredient: entecavir, brands: [Baraclude], implies: [hepatitis_b], set: {hepatitis_b: {chronic: true}}, confidence: high}
+- {ingredient: tenofovir, brands: [Viread, Vemlidy], implies: [hepatitis_b], confidence: low, note: "Chronic hepatitis B, or part of an HIV regimen."}
+- {ingredient: sofosbuvir-velpatasvir, brands: [Epclusa], implies: [hepatitis_c], confidence: high}
+- {ingredient: ledipasvir-sofosbuvir, brands: [Harvoni], implies: [hepatitis_c], confidence: high}
+- {ingredient: glecaprevir-pibrentasvir, brands: [Mavyret], implies: [hepatitis_c], confidence: high}
+
+# --- HIV -------------------------------------------------------------------
+- {ingredient: bictegravir, brands: [Biktarvy], implies: [hiv], confidence: high}
+- {ingredient: dolutegravir, brands: [Tivicay, Triumeq, Dovato], implies: [hiv], confidence: high}
+- {ingredient: emtricitabine-tenofovir, brands: [Truvada, Descovy], implies: [hiv], confidence: low, note: "HIV treatment or PrEP for prevention - these underwrite very differently."}
+- {ingredient: efavirenz, brands: [Atripla, Sustiva], implies: [hiv], confidence: high}
+- {ingredient: darunavir, brands: [Prezista, Prezcobix, Symtuza], implies: [hiv], confidence: high}
+- {ingredient: raltegravir, brands: [Isentress], implies: [hiv], confidence: high}
+- {ingredient: rilpivirine, brands: [Complera, Odefsey, Juluca], implies: [hiv], confidence: high}
+
+# --- Transplant / immunosuppression ---------------------------------------
+- {ingredient: tacrolimus, brands: [Prograf, Envarsus], implies: [organ_transplant], confidence: high}
+- {ingredient: cyclosporine, brands: [Neoral, Sandimmune, Gengraf], implies: [organ_transplant], confidence: low, note: "Transplant, or severe psoriasis / autoimmune disease."}
+- {ingredient: mycophenolate, brands: [CellCept, Myfortic], implies: [organ_transplant], confidence: low, note: "Transplant rejection prophylaxis, or lupus nephritis."}
+- {ingredient: azathioprine, brands: [Imuran], implies: [], confidence: low, note: "Transplant, autoimmune disease or inflammatory bowel disease."}
+- {ingredient: sirolimus, brands: [Rapamune], implies: [organ_transplant], confidence: high}
+- {ingredient: everolimus, brands: [Zortress, Afinitor], implies: [organ_transplant], confidence: low, note: "Transplant (Zortress) or oncology (Afinitor)."}
+- {ingredient: prednisone, brands: [Deltasone, Rayos], implies: [], confidence: low, note: "Extremely broad. Ask what it is for and whether it is a short burst or daily long-term use."}
+
+# --- Autoimmune / inflammatory --------------------------------------------
+- {ingredient: hydroxychloroquine, brands: [Plaquenil], implies: [lupus, rheumatoid_arthritis], confidence: low, note: "Lupus or rheumatoid arthritis."}
+- {ingredient: belimumab, brands: [Benlysta], implies: [lupus], confidence: high}
+- {ingredient: adalimumab, brands: [Humira, Hyrimoz, Amjevita], implies: [rheumatoid_arthritis], confidence: low, note: "RA, psoriasis, or Crohn's/colitis."}
+- {ingredient: etanercept, brands: [Enbrel], implies: [rheumatoid_arthritis], confidence: low}
+- {ingredient: infliximab, brands: [Remicade, Inflectra], implies: [crohns_colitis], confidence: low}
+- {ingredient: ustekinumab, brands: [Stelara], implies: [crohns_colitis], confidence: low}
+- {ingredient: vedolizumab, brands: [Entyvio], implies: [crohns_colitis], confidence: high}
+- {ingredient: mesalamine, brands: [Lialda, Asacol, Pentasa], implies: [crohns_colitis], confidence: high}
+- {ingredient: sulfasalazine, brands: [Azulfidine], implies: [rheumatoid_arthritis], confidence: low}
+- {ingredient: leflunomide, brands: [Arava], implies: [rheumatoid_arthritis], confidence: high}
+- {ingredient: tofacitinib, brands: [Xeljanz], implies: [rheumatoid_arthritis], confidence: medium}
+- {ingredient: abatacept, brands: [Orencia], implies: [rheumatoid_arthritis], confidence: high}
+- {ingredient: tocilizumab, brands: [Actemra], implies: [rheumatoid_arthritis], confidence: medium}
+
+# --- Thyroid / endocrine / common maintenance -----------------------------
+- {ingredient: levothyroxine, brands: [Synthroid, Levoxyl, Unithroid, Euthyrox], implies: [thyroid_disorder], confidence: high}
+- {ingredient: liothyronine, brands: [Cytomel], implies: [thyroid_disorder], confidence: high}
+- {ingredient: methimazole, brands: [Tapazole], implies: [thyroid_disorder], confidence: high}
+- {ingredient: propylthiouracil, brands: [PTU], implies: [thyroid_disorder], confidence: high}
+- {ingredient: allopurinol, brands: [Zyloprim], implies: [], confidence: low, note: "Gout - generally not rated on final expense."}
+- {ingredient: colchicine, brands: [Colcrys, Mitigare], implies: [], confidence: low, note: "Gout or pericarditis."}
+- {ingredient: febuxostat, brands: [Uloric], implies: [], confidence: low}
+- {ingredient: alendronate, brands: [Fosamax], implies: [], confidence: low, note: "Osteoporosis - generally not rated."}
+- {ingredient: denosumab, brands: [Prolia, Xgeva], implies: [], confidence: low, note: "Prolia is osteoporosis; Xgeva is for cancer bone metastases."}
+- {ingredient: omeprazole, brands: [Prilosec], implies: [], confidence: low, note: "Reflux - generally not rated."}
+- {ingredient: pantoprazole, brands: [Protonix], implies: [], confidence: low}
+- {ingredient: famotidine, brands: [Pepcid], implies: [], confidence: low}
+- {ingredient: tamsulosin, brands: [Flomax], implies: [], confidence: low, note: "Enlarged prostate - generally not rated."}
+- {ingredient: finasteride, brands: [Proscar, Propecia], implies: [], confidence: low}
+- {ingredient: dutasteride, brands: [Avodart], implies: [], confidence: low}
+- {ingredient: zolpidem, brands: [Ambien], implies: [], confidence: low, note: "Insomnia - generally not rated."}
+- {ingredient: ferrous sulfate, brands: [iron, iron pills], implies: [anemia], confidence: low, note: "Iron supplementation - ask what is causing the anemia."}
+- {ingredient: cyanocobalamin, brands: [B12, vitamin B12], implies: [], confidence: low}
+- {ingredient: potassium chloride, brands: [Klor-Con, K-Dur], implies: [], confidence: low, note: "Usually accompanies a diuretic."}
+- {ingredient: eliquis-generic, brands: [], implies: [afib], confidence: low}

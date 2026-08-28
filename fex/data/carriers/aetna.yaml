@@ -1,0 +1,35 @@
+id: aetna
+name: Aetna (CVS Health)
+am_best: "A"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's final expense
+  portfolio. Verify against the current field underwriting guide.
+rate_index: 1.00
+underwriting_style: Three-tier application (Preferred / Standard / Graded) with Rx check.
+notes:
+  - Preferred class is genuinely attainable for a healthy senior, which is unusual in this space.
+build:
+  bmi: {min: 17, preferred_max: 33, level_max: 40, graded_max: 46}
+products:
+  - id: protection_preferred
+    name: Protection Series - Preferred
+    tier: preferred
+    issue_ages: {min: 40, max: 89}
+    face: {min: 2000, max: 50000}
+    benefit_schedule: Full death benefit from day one at the carrier's best rate.
+  - id: protection_standard
+    name: Protection Series - Standard
+    tier: level
+    issue_ages: {min: 40, max: 89}
+    face: {min: 2000, max: 50000}
+    benefit_schedule: Full death benefit from day one.
+  - id: protection_graded
+    name: Protection Series - Graded
+    tier: graded
+    issue_ages: {min: 40, max: 89}
+    face: {min: 2000, max: 25000}
+    benefit_schedule: Years 1-2 pay 30% / 70% of face; full benefit from year 3.
+underwriting:
+  extends: [preferred_screen, core_knockouts, level_screen_standard, graded_screen_standard]

@@ -1,0 +1,35 @@
+id: united_home_life
+name: United Home Life
+am_best: "A-"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's final expense
+  portfolio. Verify against the current field underwriting guide.
+rate_index: 0.94
+underwriting_style: Express Issue application; aggressive pricing on clean cases.
+notes:
+  - Frequently the cheapest level offer when the client is genuinely healthy.
+build:
+  bmi: {min: 17, preferred_max: 31, level_max: 39, graded_max: 45}
+products:
+  - id: express_premier
+    name: Express Issue Premier Whole Life
+    tier: preferred
+    issue_ages: {min: 45, max: 80}
+    face: {min: 5000, max: 50000}
+    benefit_schedule: Full death benefit from day one at the best rate class.
+  - id: express_deluxe
+    name: Express Issue Deluxe Whole Life
+    tier: level
+    issue_ages: {min: 45, max: 80}
+    face: {min: 5000, max: 50000}
+    benefit_schedule: Full death benefit from day one.
+  - id: express_graded
+    name: Express Issue Graded Whole Life
+    tier: graded
+    issue_ages: {min: 20, max: 80}
+    face: {min: 5000, max: 20000}
+    benefit_schedule: Years 1-2 pay 30% / 70% of face; full benefit from year 3.
+underwriting:
+  extends: [preferred_screen, core_knockouts, level_screen_conservative, level_screen_standard, graded_screen_standard, chronic_screen_tight]

@@ -1,0 +1,22 @@
+id: corebridge
+name: Corebridge Financial (AIG)
+am_best: "A"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's guaranteed issue
+  product. Verify against the current guide.
+rate_index: 1.10
+underwriting_style: Guaranteed issue only - no health questions.
+notes:
+  - Widely advertised. Useful as the last stop for a client no underwritten carrier will take.
+products:
+  - id: giwl
+    name: Guaranteed Issue Whole Life
+    tier: gi
+    bypass_underwriting: true
+    issue_ages: {min: 50, max: 85}
+    face: {min: 5000, max: 25000}
+    benefit_schedule: Return of premium plus interest for the first 2 years; full benefit after.
+underwriting:
+  extends: [gi_no_questions]

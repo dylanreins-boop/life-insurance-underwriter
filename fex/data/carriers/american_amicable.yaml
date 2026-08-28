@@ -1,0 +1,35 @@
+id: american_amicable
+name: American-Amicable
+am_best: "A"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's final expense
+  portfolio. Verify against the current field underwriting guide.
+rate_index: 0.98
+underwriting_style: Three-plan structure with a modified plan that takes most impaired risks.
+notes:
+  - The modified plan is a common landing spot when a client is declined elsewhere but does not want guaranteed issue.
+build:
+  bmi: {min: 17, level_max: 41, graded_max: 47}
+products:
+  - id: senior_choice_immediate
+    name: Senior Choice - Immediate Benefit
+    tier: level
+    issue_ages: {min: 50, max: 85}
+    face: {min: 2500, max: 35000}
+    benefit_schedule: Full death benefit from day one.
+  - id: senior_choice_graded
+    name: Senior Choice - Graded Benefit
+    tier: graded
+    issue_ages: {min: 50, max: 80}
+    face: {min: 2500, max: 25000}
+    benefit_schedule: Years 1-2 pay 30% / 70% of face; full benefit from year 3.
+  - id: senior_choice_modified
+    name: Senior Choice - Modified Benefit
+    tier: modified
+    issue_ages: {min: 50, max: 80}
+    face: {min: 2500, max: 15000}
+    benefit_schedule: Return of premium plus 10% in years 1-2; full benefit from year 3.
+underwriting:
+  extends: [core_knockouts, level_screen_standard, graded_screen_standard]

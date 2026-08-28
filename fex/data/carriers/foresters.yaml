@@ -1,0 +1,41 @@
+id: foresters
+name: Foresters Financial
+am_best: "A"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's final expense
+  portfolio. Verify against the current field underwriting guide.
+rate_index: 1.01
+underwriting_style: Three-class PlanRight application with member benefits attached.
+notes:
+  - Fraternal benefits (scholarships, community grants) are a real closing tool with some clients.
+build:
+  bmi: {min: 17, preferred_max: 33, level_max: 40, graded_max: 45}
+products:
+  - id: planright_preferred
+    name: PlanRight Preferred
+    tier: preferred
+    issue_ages: {min: 50, max: 85}
+    face: {min: 5000, max: 35000}
+    benefit_schedule: Full death benefit from day one at the best rate class.
+  - id: planright_standard
+    name: PlanRight Standard
+    tier: level
+    issue_ages: {min: 50, max: 85}
+    face: {min: 5000, max: 35000}
+    benefit_schedule: Full death benefit from day one.
+  - id: planright_basic
+    name: PlanRight Basic
+    tier: modified
+    issue_ages: {min: 50, max: 80}
+    face: {min: 2000, max: 20000}
+    benefit_schedule: Years 1-2 return premium plus 10%; full benefit from year 3.
+underwriting:
+  extends: [preferred_screen, core_knockouts, level_screen_standard, graded_screen_standard]
+  rules:
+    - id: for_insulin
+      label: Insulin-dependent diabetes
+      conditions: [diabetes_type1, diabetes_type2]
+      when: {insulin: true}
+      outcome: graded

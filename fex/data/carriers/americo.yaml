@@ -1,0 +1,44 @@
+id: americo
+name: Americo
+am_best: "A"
+verified: false
+as_of: "2026-08"
+source_note: >-
+  Seeded from general market knowledge of this carrier's final expense
+  portfolio. Verify against the current field underwriting guide.
+rate_index: 0.96
+underwriting_style: Simplified issue with instant decision; known for taking cardiac history sooner than most.
+notes:
+  - Often the answer for a client with a heart attack or stent 1-2 years back.
+build:
+  bmi: {min: 16.5, level_max: 42, graded_max: 48}
+products:
+  - id: eagle_premier
+    name: Eagle Premier (Level)
+    tier: level
+    issue_ages: {min: 50, max: 85}
+    face: {min: 2000, max: 40000}
+    benefit_schedule: Full death benefit from day one.
+  - id: ultra_protector_i
+    name: Ultra Protector I (Graded)
+    tier: graded
+    issue_ages: {min: 50, max: 85}
+    face: {min: 2000, max: 30000}
+    benefit_schedule: Years 1-2 pay a reduced percentage of face; full benefit from year 3.
+  - id: ultra_protector_ii
+    name: Ultra Protector II (Modified)
+    tier: modified
+    issue_ages: {min: 50, max: 80}
+    face: {min: 2000, max: 20000}
+    benefit_schedule: Return of premium plus interest in years 1-2; full benefit from year 3.
+underwriting:
+  # Order matters: later packs override earlier ones by rule id, so the liberal
+  # lookbacks below replace the standard ones while everything the liberal pack
+  # does not mention still falls back to the standard screen.
+  extends: [core_knockouts, level_screen_standard, level_screen_liberal, graded_screen_standard]
+  rules:
+    - id: lv_cancer
+      label: Internal cancer treated within 24 months
+      conditions: [cancer_internal, leukemia_lymphoma, melanoma]
+      when: {months_since_treatment: {lt: 24}}
+      outcome: graded

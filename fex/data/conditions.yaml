@@ -1,0 +1,514 @@
+# Canonical health conditions asked about on final expense applications.
+#
+# `aliases` feed the free-text matcher, so they should include the words a
+# client actually says ("sugar", "mini stroke", "water pill") as well as the
+# clinical term. `followups` are the detail questions that carrier rules key
+# off; the engine only asks the ones a matched rule actually needs.
+#
+# followup types: bool | int | months | years | enum | float
+
+- id: heart_attack
+  label: Heart attack (myocardial infarction)
+  category: cardiovascular
+  aliases: [heart attack, myocardial infarction, mi, coronary, widowmaker, cardiac arrest]
+  followups:
+    - {key: months_since_event, type: months, question: "How many months since the heart attack?"}
+    - {key: count, type: int, question: "How many heart attacks in total?"}
+
+- id: stent_angioplasty
+  label: Stent or angioplasty
+  category: cardiovascular
+  aliases: [stent, stents, angioplasty, cardiac stent, balloon angioplasty, pci]
+  followups:
+    - {key: months_since_event, type: months, question: "How many months since the stent/angioplasty?"}
+
+- id: bypass_surgery
+  label: Coronary bypass surgery
+  category: cardiovascular
+  aliases: [bypass, bypass surgery, cabg, open heart surgery, triple bypass, quadruple bypass]
+  followups:
+    - {key: months_since_event, type: months, question: "How many months since the bypass surgery?"}
+
+- id: angina
+  label: Angina / chest pain
+  category: cardiovascular
+  aliases: [angina, chest pain, unstable angina]
+  followups:
+    - {key: months_since_event, type: months, question: "How many months since the last episode of angina?"}
+
+- id: chf
+  label: Congestive heart failure
+  category: cardiovascular
+  aliases: [chf, congestive heart failure, heart failure, systolic heart failure, diastolic heart failure, hfref, hfpef]
+  followups:
+    - {key: months_since_diagnosis, type: months, question: "How many months since CHF was diagnosed?"}
+    - {key: hospitalized_12mo, type: bool, question: "Hospitalised for heart failure in the last 12 months?"}
+
+- id: cardiomyopathy
+  label: Cardiomyopathy
+  category: cardiovascular
+  aliases: [cardiomyopathy, enlarged heart, dilated cardiomyopathy]
+  followups:
+    - {key: months_since_diagnosis, type: months, question: "How many months since diagnosis?"}
+
+- id: afib
+  label: Atrial fibrillation / irregular heartbeat
+  category: cardiovascular
+  aliases: [afib, a-fib, atrial fibrillation, irregular heartbeat, arrhythmia, atrial flutter, svt]
+  followups:
+    - {key: controlled, type: bool, question: "Is the arrhythmia controlled with medication?"}
+
+- id: pacemaker
+  label: Pacemaker
+  category: cardiovascular
+  aliases: [pacemaker, cardiac pacemaker]
+  followups:
+    - {key: months_since_implant, type: months, question: "How many months since the pacemaker was implanted?"}
+
+- id: defibrillator_icd
+  label: Implanted defibrillator (ICD)
+  category: cardiovascular
+  aliases: [defibrillator, icd, implanted defibrillator, aicd]
+  followups:
+    - {key: months_since_implant, type: months, question: "How many months since the ICD was implanted?"}
+
+- id: heart_valve
+  label: Heart valve disease or replacement
+  category: cardiovascular
+  aliases: [heart valve, valve replacement, mitral valve, aortic stenosis, valve repair, tavr]
+  followups:
+    - {key: months_since_event, type: months, question: "How many months since valve surgery (if any)?"}
+
+- id: aneurysm
+  label: Aneurysm
+  category: cardiovascular
+  aliases: [aneurysm, aortic aneurysm, aaa, brain aneurysm, abdominal aortic aneurysm]
+  followups:
+    - {key: repaired, type: bool, question: "Has the aneurysm been surgically repaired?"}
+    - {key: months_since_repair, type: months, question: "How many months since the repair?"}
+
+- id: pad
+  label: Peripheral artery disease / carotid artery disease
+  category: cardiovascular
+  aliases: [pad, peripheral artery disease, peripheral vascular disease, pvd, carotid artery disease, carotid stenosis, claudication]
+  followups:
+    - {key: surgery, type: bool, question: "Any surgery for it (endarterectomy, stent, bypass)?"}
+    - {key: months_since_event, type: months, question: "How many months since diagnosis or surgery?"}
+
+- id: hypertension
+  label: High blood pressure
+  category: cardiovascular
+  aliases: [high blood pressure, hypertension, htn, blood pressure]
+  followups:
+    - {key: controlled, type: bool, question: "Is the blood pressure controlled on medication?"}
+
+- id: high_cholesterol
+  label: High cholesterol
+  category: cardiovascular
+  aliases: [high cholesterol, hyperlipidemia, hypercholesterolemia, cholesterol]
+
+- id: blood_clot
+  label: Blood clot (DVT or pulmonary embolism)
+  category: cardiovascular
+  aliases: [blood clot, dvt, deep vein thrombosis, pulmonary embolism, pe, clotting disorder]
+  followups:
+    - {key: months_since_event, type: months, question: "How many months since the clot?"}
+
+- id: stroke
+  label: Stroke (CVA)
+  category: neurological
+  aliases: [stroke, cva, cerebrovascular accident, brain bleed, hemorrhagic stroke]
+  followups:
+    - {key: months_since_event, type: months, question: "How many months since the stroke?"}
+    - {key: count, type: int, question: "How many strokes in total?"}
+    - {key: residual_deficit, type: bool, question: "Any lasting weakness, speech or mobility deficit?"}
+
+- id: tia
+  label: TIA / mini-stroke
+  category: neurological
+  aliases: [tia, mini stroke, mini-stroke, transient ischemic attack]
+  followups:
+    - {key: months_since_event, type: months, question: "How many months since the TIA?"}
+    - {key: count, type: int, question: "How many TIAs in total?"}
+
+- id: dementia
+  label: Alzheimer's disease or dementia
+  category: neurological
+  aliases: [alzheimers, alzheimer's, dementia, memory loss, cognitive impairment, senile dementia, lewy body, mci, mild cognitive impairment]
+
+- id: parkinsons
+  label: Parkinson's disease
+  category: neurological
+  aliases: [parkinsons, parkinson's, parkinson disease]
+  followups:
+    - {key: months_since_diagnosis, type: months, question: "How many months since diagnosis?"}
+    - {key: adl_assistance, type: bool, question: "Does the applicant need help with activities of daily living?"}
+
+- id: als
+  label: ALS (Lou Gehrig's disease)
+  category: neurological
+  aliases: [als, lou gehrigs, lou gehrig's, amyotrophic lateral sclerosis]
+
+- id: multiple_sclerosis
+  label: Multiple sclerosis
+  category: neurological
+  aliases: [ms, multiple sclerosis]
+  followups:
+    - {key: adl_assistance, type: bool, question: "Any assistance needed with daily activities?"}
+    - {key: months_since_diagnosis, type: months, question: "How many months since diagnosis?"}
+
+- id: muscular_dystrophy
+  label: Muscular dystrophy
+  category: neurological
+  aliases: [muscular dystrophy, md]
+
+- id: huntingtons
+  label: Huntington's disease
+  category: neurological
+  aliases: [huntingtons, huntington's, huntington disease, huntingtons chorea]
+
+- id: epilepsy
+  label: Seizures / epilepsy
+  category: neurological
+  aliases: [seizures, seizure, epilepsy, convulsions, grand mal, petit mal]
+  followups:
+    - {key: months_since_event, type: months, question: "How many months since the last seizure?"}
+
+- id: paralysis
+  label: Paralysis
+  category: neurological
+  aliases: [paralysis, paraplegia, quadriplegia, hemiplegia, paralyzed]
+
+- id: cerebral_palsy
+  label: Cerebral palsy
+  category: neurological
+  aliases: [cerebral palsy, cp]
+
+- id: cancer_internal
+  label: Internal cancer
+  category: oncology
+  aliases: [cancer, tumor, tumour, carcinoma, breast cancer, lung cancer, colon cancer, prostate cancer, ovarian cancer, pancreatic cancer, bladder cancer, kidney cancer, liver cancer, stomach cancer, esophageal cancer, brain cancer, sarcoma]
+  followups:
+    - {key: months_since_treatment, type: months, question: "How many months since cancer treatment ended?"}
+    - {key: stage, type: int, question: "What stage was the cancer (1-4)?"}
+    - {key: recurrence, type: bool, question: "Has the cancer ever recurred or spread?"}
+    - {key: currently_treated, type: bool, question: "Is the applicant currently in treatment?"}
+
+- id: melanoma
+  label: Melanoma
+  category: oncology
+  aliases: [melanoma, malignant melanoma, skin cancer melanoma]
+  followups:
+    - {key: months_since_treatment, type: months, question: "How many months since melanoma treatment ended?"}
+
+- id: skin_cancer_basal
+  label: Basal cell or squamous cell skin cancer
+  category: oncology
+  aliases: [basal cell, squamous cell, skin cancer, basal cell carcinoma, squamous cell carcinoma]
+
+- id: leukemia_lymphoma
+  label: Leukemia, lymphoma or myeloma
+  category: oncology
+  aliases: [leukemia, leukaemia, lymphoma, myeloma, multiple myeloma, hodgkins, non-hodgkins, cll, aml, blood cancer]
+  followups:
+    - {key: months_since_treatment, type: months, question: "How many months since treatment ended?"}
+    - {key: currently_treated, type: bool, question: "Is the applicant currently in treatment?"}
+
+- id: copd
+  label: COPD / emphysema
+  category: respiratory
+  aliases: [copd, emphysema, chronic obstructive pulmonary disease, chronic bronchitis]
+  followups:
+    - {key: oxygen, type: bool, question: "Does the applicant use oxygen?"}
+    - {key: hospitalized_12mo, type: bool, question: "Hospitalised for breathing problems in the last 12 months?"}
+    - {key: months_since_diagnosis, type: months, question: "How many months since diagnosis?"}
+
+- id: asthma
+  label: Asthma
+  category: respiratory
+  aliases: [asthma, reactive airway disease]
+  followups:
+    - {key: hospitalized_12mo, type: bool, question: "Hospitalised or in the ER for asthma in the last 12 months?"}
+
+- id: oxygen_use
+  label: Oxygen use
+  category: respiratory
+  aliases: [oxygen, oxygen tank, home oxygen, o2, cpap oxygen, supplemental oxygen]
+  followups:
+    - {key: for_sleep_apnea_only, type: bool, question: "Is the oxygen used only for sleep apnea?"}
+
+- id: sleep_apnea
+  label: Sleep apnea
+  category: respiratory
+  aliases: [sleep apnea, sleep apnoea, cpap, osa]
+
+- id: pulmonary_fibrosis
+  label: Pulmonary fibrosis / interstitial lung disease
+  category: respiratory
+  aliases: [pulmonary fibrosis, ipf, interstitial lung disease, sarcoidosis lung, asbestosis, black lung]
+
+- id: cystic_fibrosis
+  label: Cystic fibrosis
+  category: respiratory
+  aliases: [cystic fibrosis, cf]
+
+- id: diabetes_type1
+  label: Type 1 diabetes
+  category: endocrine
+  aliases: [type 1 diabetes, type i diabetes, juvenile diabetes, t1dm, insulin dependent diabetes]
+  followups:
+    - {key: age_at_diagnosis, type: int, question: "At what age was the diabetes diagnosed?"}
+    - {key: complications, type: bool, question: "Any diabetic complications (neuropathy, retinopathy, kidney disease, amputation)?"}
+
+- id: diabetes_type2
+  label: Type 2 diabetes
+  category: endocrine
+  aliases: [diabetes, type 2 diabetes, type ii diabetes, t2dm, sugar diabetes, diabetes mellitus, adult onset diabetes, sugar, borderline diabetes, prediabetes]
+  followups:
+    - {key: insulin, type: bool, question: "Is the applicant taking insulin?"}
+    - {key: age_at_diagnosis, type: int, question: "At what age was the diabetes diagnosed?"}
+    - {key: complications, type: bool, question: "Any diabetic complications (neuropathy, retinopathy, kidney disease, amputation)?"}
+    - {key: a1c, type: float, question: "What was the most recent A1C?"}
+
+- id: diabetic_complications
+  label: Diabetic complications (neuropathy, retinopathy, ulcers)
+  category: endocrine
+  aliases: [neuropathy, diabetic neuropathy, retinopathy, diabetic retinopathy, diabetic ulcer, diabetic coma, insulin shock, charcot foot]
+
+- id: amputation_disease
+  label: Amputation caused by disease
+  category: endocrine
+  aliases: [amputation, amputated toe, amputated foot, amputated leg, diabetic amputation]
+  followups:
+    - {key: cause_disease, type: bool, question: "Was the amputation caused by disease (rather than an accident)?"}
+
+- id: thyroid_disorder
+  label: Thyroid disorder
+  category: endocrine
+  aliases: [thyroid, hypothyroid, hypothyroidism, hyperthyroid, hyperthyroidism, graves disease, hashimotos, goiter]
+
+- id: ckd
+  label: Chronic kidney disease
+  category: renal
+  aliases: [kidney disease, ckd, chronic kidney disease, renal insufficiency, renal failure, kidney failure, nephropathy]
+  followups:
+    - {key: stage, type: int, question: "What stage is the kidney disease (1-5)?"}
+    - {key: dialysis, type: bool, question: "Is the applicant on dialysis?"}
+
+- id: dialysis
+  label: Dialysis
+  category: renal
+  aliases: [dialysis, hemodialysis, peritoneal dialysis, kidney dialysis]
+
+- id: organ_transplant
+  label: Organ transplant (received or pending)
+  category: transplant
+  aliases: [organ transplant, kidney transplant, liver transplant, heart transplant, lung transplant, transplant list, bone marrow transplant, stem cell transplant]
+  followups:
+    - {key: pending, type: bool, question: "Is the applicant awaiting a transplant, or has it already happened?"}
+    - {key: months_since_transplant, type: months, question: "How many months since the transplant?"}
+
+- id: hepatitis_b
+  label: Hepatitis B
+  category: hepatic
+  aliases: [hepatitis b, hep b, hbv]
+  followups:
+    - {key: chronic, type: bool, question: "Is it chronic, or was it resolved?"}
+
+- id: hepatitis_c
+  label: Hepatitis C
+  category: hepatic
+  aliases: [hepatitis c, hep c, hcv, hepatitis]
+  followups:
+    - {key: treated_cured, type: bool, question: "Has it been treated and cleared?"}
+    - {key: months_since_treatment, type: months, question: "How many months since treatment ended?"}
+
+- id: cirrhosis
+  label: Cirrhosis or liver failure
+  category: hepatic
+  aliases: [cirrhosis, liver failure, liver disease, esophageal varices, ascites, liver cancer, end stage liver disease]
+
+- id: fatty_liver
+  label: Fatty liver / elevated liver enzymes
+  category: hepatic
+  aliases: [fatty liver, nafld, nash, elevated liver enzymes, liver enzymes]
+
+- id: pancreatitis
+  label: Pancreatitis
+  category: gastrointestinal
+  aliases: [pancreatitis, chronic pancreatitis]
+  followups:
+    - {key: chronic, type: bool, question: "Is the pancreatitis chronic or was it a single episode?"}
+    - {key: months_since_event, type: months, question: "How many months since the last episode?"}
+
+- id: crohns_colitis
+  label: Crohn's disease or ulcerative colitis
+  category: gastrointestinal
+  aliases: [crohns, crohn's, ulcerative colitis, colitis, ibd, inflammatory bowel disease]
+
+- id: hiv
+  label: HIV / AIDS
+  category: immune
+  aliases: [hiv, aids, human immunodeficiency virus, hiv positive]
+
+- id: lupus
+  label: Lupus
+  category: immune
+  aliases: [lupus, sle, systemic lupus]
+  followups:
+    - {key: organ_involvement, type: bool, question: "Any kidney or other organ involvement?"}
+
+- id: rheumatoid_arthritis
+  label: Rheumatoid arthritis
+  category: immune
+  aliases: [rheumatoid arthritis, ra, rheumatoid]
+
+- id: scleroderma
+  label: Scleroderma / systemic sclerosis
+  category: immune
+  aliases: [scleroderma, systemic sclerosis]
+
+- id: sickle_cell
+  label: Sickle cell disease
+  category: hematologic
+  aliases: [sickle cell, sickle cell anemia, sickle cell disease]
+
+- id: aplastic_anemia
+  label: Aplastic anemia / bone marrow disorder
+  category: hematologic
+  aliases: [aplastic anemia, bone marrow disorder, myelodysplastic, mds, polycythemia vera]
+
+- id: anemia
+  label: Anemia (non-aplastic)
+  category: hematologic
+  aliases: [anemia, anaemia, iron deficiency, low blood]
+
+- id: depression
+  label: Depression
+  category: behavioral
+  aliases: [depression, depressed, major depressive disorder, mdd, sad]
+  followups:
+    - {key: hospitalized, type: bool, question: "Ever hospitalised for depression?"}
+
+- id: anxiety
+  label: Anxiety
+  category: behavioral
+  aliases: [anxiety, panic attacks, panic disorder, ptsd, gad]
+
+- id: bipolar
+  label: Bipolar disorder
+  category: behavioral
+  aliases: [bipolar, manic depression, manic depressive]
+  followups:
+    - {key: hospitalized_24mo, type: bool, question: "Hospitalised for it in the last 24 months?"}
+
+- id: schizophrenia
+  label: Schizophrenia or psychotic disorder
+  category: behavioral
+  aliases: [schizophrenia, schizoaffective, psychosis, psychotic disorder]
+
+- id: suicide_attempt
+  label: Suicide attempt
+  category: behavioral
+  aliases: [suicide attempt, attempted suicide, self harm]
+  followups:
+    - {key: months_since_event, type: months, question: "How many months since the attempt?"}
+
+- id: alcohol_abuse
+  label: Alcohol abuse or treatment
+  category: behavioral
+  aliases: [alcoholism, alcohol abuse, alcoholic, rehab alcohol, aa, detox]
+  followups:
+    - {key: months_since_treatment, type: months, question: "How many months since treatment or last use?"}
+
+- id: drug_abuse
+  label: Drug or prescription abuse
+  category: behavioral
+  aliases: [drug abuse, drug addiction, substance abuse, opioid addiction, heroin, cocaine, methamphetamine, meth, prescription abuse, suboxone program, methadone program]
+  followups:
+    - {key: months_since_treatment, type: months, question: "How many months since treatment or last use?"}
+
+- id: marijuana
+  label: Marijuana use
+  category: behavioral
+  aliases: [marijuana, cannabis, thc, weed, medical marijuana, edibles]
+  followups:
+    - {key: frequency_per_week, type: int, question: "How many times per week?"}
+
+- id: nursing_home
+  label: Nursing home confinement
+  category: care
+  aliases: [nursing home, skilled nursing, long term care facility, snf, rehab facility]
+  followups:
+    - {key: current, type: bool, question: "Is the applicant currently in a nursing home?"}
+
+- id: assisted_living
+  label: Assisted living
+  category: care
+  aliases: [assisted living, alf, memory care, group home]
+
+- id: home_health_care
+  label: Home health care
+  category: care
+  aliases: [home health, home health care, visiting nurse, home aide, caregiver]
+  followups:
+    - {key: skilled_care, type: bool, question: "Is it skilled nursing care, or just housekeeping/companion help?"}
+
+- id: adl_assistance
+  label: Needs help with activities of daily living
+  category: care
+  aliases: [adl, needs help bathing, needs help dressing, cannot bathe, help toileting, help eating, incontinent]
+
+- id: wheelchair
+  label: Wheelchair or motorised scooter use
+  category: care
+  aliases: [wheelchair, motorized scooter, electric scooter, walker, bedridden, bed confined]
+  followups:
+    - {key: cause_disease, type: bool, question: "Is it needed because of a chronic illness (rather than an injury)?"}
+
+- id: hospice
+  label: Hospice care
+  category: care
+  aliases: [hospice, palliative care, comfort care]
+
+- id: terminal_illness
+  label: Terminal illness / limited life expectancy
+  category: care
+  aliases: [terminal, terminal illness, less than 12 months to live, life expectancy, end stage]
+
+- id: hospitalization_recent
+  label: Recent hospitalisation
+  category: care
+  aliases: [hospitalized, hospital stay, hospitalised, in the hospital]
+  followups:
+    - {key: months_since_event, type: months, question: "How many months since the hospital stay?"}
+
+- id: pending_tests
+  label: Pending tests or undiagnosed symptoms
+  category: care
+  aliases: [pending tests, awaiting results, undiagnosed, biopsy pending, waiting on results, referred to specialist]
+
+- id: down_syndrome
+  label: Down syndrome
+  category: congenital
+  aliases: [down syndrome, downs syndrome, trisomy 21]
+
+- id: mental_incapacity
+  label: Mental incapacity / guardianship
+  category: congenital
+  aliases: [mental incapacity, guardianship, power of attorney health, intellectual disability, mentally incapacitated, developmental disability]
+
+- id: felony_probation
+  label: Felony conviction, probation or parole
+  category: lifestyle
+  aliases: [felony, probation, parole, incarcerated, prison, jail]
+  followups:
+    - {key: current, type: bool, question: "Is the applicant currently on probation or parole?"}
+
+- id: dui
+  label: DUI / DWI
+  category: lifestyle
+  aliases: [dui, dwi, drunk driving, driving under the influence]
+  followups:
+    - {key: months_since_event, type: months, question: "How many months since the DUI?"}
+    - {key: count_5yr, type: int, question: "How many DUIs in the last 5 years?"}
